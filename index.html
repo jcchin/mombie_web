@@ -5,10 +5,10 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="">
+  <meta name="description" content="Mombie – the app that helps couples survive the newborn night shift together.">
   <meta name="author" content="">
 
-  <title>New Age - Start Bootstrap Theme</title>
+  <title>Mombie – Survive the Night Together</title>
 
   <!-- Bootstrap core CSS -->
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -26,20 +26,99 @@
   <!-- Custom styles for this template -->
   <link href="css/new-age.min.css" rel="stylesheet">
 
+  <style>
+    /* Mombie palette overrides */
+    :root {
+      --mombie-indigo: #3b2f6e;
+      --mombie-purple: #7b4397;
+      --mombie-gold:   #fdcc52;
+      --mombie-soft:   #f4f0ff;
+    }
+
+    /* Navbar brand logo */
+    .navbar-brand img {
+      height: 32px;
+      width: 32px;
+      border-radius: 8px;
+      margin-right: 8px;
+    }
+
+    /* Star / moon decorative divider */
+    .section-divider {
+      font-size: 1.4rem;
+      letter-spacing: 0.5rem;
+      color: var(--mombie-gold);
+      margin: 0 auto 1.5rem;
+    }
+
+    /* Watch mockup sizing tweak */
+    .watch-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 1.5rem;
+    }
+    .watch-container img {
+      max-width: 180px;
+      border-radius: 32px;
+      box-shadow: 0 8px 32px rgba(59,47,110,0.25);
+    }
+
+    /* Hero sub-badge */
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      color: #fff;
+    }
+
+    /* Shift cards in features */
+    .shift-card {
+      background: var(--mombie-soft);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border-left: 4px solid var(--mombie-purple);
+    }
+    .shift-card h4 {
+      color: var(--mombie-indigo);
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .shift-card p {
+      color: #555;
+      margin: 0;
+      font-size: 0.92rem;
+    }
+    .shift-card .shift-icon {
+      font-size: 1.6rem;
+      margin-bottom: 0.6rem;
+    }
+  </style>
+
 </head>
 
-<body id="page-top">
+<body id="page-top" data-bs-spy="scroll" data-bs-target="#mainNav" data-bs-offset="54">
 
   <!-- Navigation -->
   <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
     <div class="container">
-      <a class="navbar-brand js-scroll-trigger" href="#page-top">Start Bootstrap</a>
-      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+      <a class="navbar-brand js-scroll-trigger" href="#page-top">
+        <img src="https://raw.githubusercontent.com/jcchin/mombie_flutter/master/assets/images/icon.png" alt="Mombie logo">
+        Mombie
+      </a>
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
         Menu
         <i class="fas fa-bars"></i>
       </button>
       <div class="collapse navbar-collapse" id="navbarResponsive">
-        <ul class="navbar-nav ml-auto">
+        <ul class="navbar-nav ms-auto">
           <li class="nav-item">
             <a class="nav-link js-scroll-trigger" href="#download">Download</a>
           </li>
@@ -54,26 +133,37 @@
     </div>
   </nav>
 
+  <!-- Hero / Masthead -->
   <header class="masthead">
     <div class="container h-100">
       <div class="row h-100">
         <div class="col-lg-7 my-auto">
           <div class="header-content mx-auto">
-            <h1 class="mb-5">New Age is an app landing page that will help you beautifully showcase your new mobile app, or anything else!</h1>
-            <a href="#download" class="btn btn-outline btn-xl js-scroll-trigger">Start Now for Free!</a>
+            <span class="hero-badge">🌙 For sleep-deprived parents everywhere</span>
+            <h1 class="mb-5">Take turns.<br>Get rest.<br>Survive the newborn nights — together.</h1>
+            <p class="mb-5" style="color:rgba(255,255,255,0.85);font-size:1.1rem;">Mombie coordinates night-shift schedules between partners so both of you actually get to sleep. Gentle smartwatch alerts wake the right parent at the right time — without disturbing anyone else.</p>
+            <a href="#download" class="btn btn-outline btn-xl js-scroll-trigger">Download Free</a>
           </div>
         </div>
         <div class="col-lg-5 my-auto">
           <div class="device-container">
             <div class="device-mockup iphone6_plus portrait white">
               <div class="device">
-                <div class="screen">
-                  <!-- Demo image for screen mockup, you can put an image here, some HTML, an animation, video, or anything else! -->
-                  <img src="img/demo-screen-1.jpg" class="img-fluid" alt="">
+                <div class="screen" style="background: linear-gradient(160deg, #1a1040 0%, #3b2f6e 60%, #7b4397 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 20px 16px;">
+                  <img src="https://raw.githubusercontent.com/jcchin/mombie_flutter/master/assets/images/icon.png" alt="Mombie" style="width:64px;border-radius:16px;margin-bottom:12px;">
+                  <div style="color:#fdcc52;font-size:1.3rem;font-weight:700;margin-bottom:4px;">Your shift ends in</div>
+                  <div style="color:#fff;font-size:3rem;font-weight:900;letter-spacing:2px;">2:45</div>
+                  <div style="color:rgba(255,255,255,0.6);font-size:0.8rem;margin-bottom:20px;">Waking Alex at 4:00 AM</div>
+                  <div style="background:rgba(255,255,255,0.1);border-radius:12px;padding:12px 16px;width:100%;margin-bottom:10px;">
+                    <div style="color:rgba(255,255,255,0.5);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Last logged</div>
+                    <div style="color:#fff;font-size:0.9rem;margin-top:2px;">🍼 Fed · 1:12 AM &nbsp;|&nbsp; 💤 Settled · 1:28 AM</div>
+                  </div>
+                  <div style="background:rgba(253,204,82,0.15);border:1px solid rgba(253,204,82,0.4);border-radius:12px;padding:12px 16px;width:100%;">
+                    <div style="color:rgba(255,255,255,0.5);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Alex's next shift</div>
+                    <div style="color:#fdcc52;font-size:0.9rem;margin-top:2px;">4:00 AM – 7:00 AM</div>
+                  </div>
                 </div>
-                <div class="button">
-                  <!-- You can hook the "home button" to some JavaScript events or just remove it -->
-                </div>
+                <div class="button"></div>
               </div>
             </div>
           </div>
@@ -82,99 +172,156 @@
     </div>
   </header>
 
+  <!-- Download -->
   <section class="download bg-primary text-center" id="download">
     <div class="container">
       <div class="row">
         <div class="col-md-8 mx-auto">
-          <h2 class="section-heading">Discover what all the buzz is about!</h2>
-          <p>Our app is available on any mobile device! Download now to get started!</p>
+          <h2 class="section-heading">Free for iPhone &amp; Apple Watch</h2>
+          <p>Download Mombie today. Set up your shift schedule in under two minutes and both of you get to sleep tonight.</p>
           <div class="badges">
-            <a class="badge-link" href="#"><img src="img/google-play-badge.svg" alt=""></a>
-            <a class="badge-link" href="#"><img src="img/app-store-badge.svg" alt=""></a>
+            <a class="badge-link" href="#"><img src="img/google-play-badge.svg" alt="Get it on Google Play"></a>
+            <a class="badge-link" href="#"><img src="img/app-store-badge.svg" alt="Download on the App Store"></a>
           </div>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- Features -->
   <section class="features" id="features">
     <div class="container">
       <div class="section-heading text-center">
-        <h2>Unlimited Features, Unlimited Fun</h2>
-        <p class="text-muted">Check out what you can do with this app theme!</p>
+        <div class="section-divider">🌙 ⭐ 🌙</div>
+        <h2>Everything you need to share the night shift</h2>
+        <p class="text-muted">Mombie works on your phone and your watch so you always know who's on and who can rest.</p>
         <hr>
       </div>
-      <div class="row">
-        <div class="col-lg-4 my-auto">
-          <div class="device-container">
-            <div class="device-mockup iphone6_plus portrait white">
+      <div class="row align-items-center">
+
+        <!-- Phone + Watch mockups -->
+        <div class="col-lg-4 text-center">
+          <div class="device-container mb-4">
+            <div class="device-mockup iphone_x portrait black">
               <div class="device">
-                <div class="screen">
-                  <!-- Demo image for screen mockup, you can put an image here, some HTML, an animation, video, or anything else! -->
-                  <img src="img/demo-screen-1.jpg" class="img-fluid" alt="">
-                </div>
-                <div class="button">
-                  <!-- You can hook the "home button" to some JavaScript events or just remove it -->
+                <div class="screen" style="background: linear-gradient(160deg, #1a1040 0%, #3b2f6e 55%, #7b4397 100%); display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding: 24px 16px 16px;">
+                  <div style="color:rgba(255,255,255,0.5);font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Tonight's Shifts</div>
+                  <div style="width:100%;background:rgba(253,204,82,0.18);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+                    <div style="color:#fdcc52;font-size:0.75rem;font-weight:700;">YOU &nbsp; 10PM – 1AM</div>
+                    <div style="color:rgba(255,255,255,0.6);font-size:0.65rem;">3 hrs · currently active</div>
+                  </div>
+                  <div style="width:100%;background:rgba(255,255,255,0.07);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+                    <div style="color:#a78bfa;font-size:0.75rem;font-weight:700;">ALEX &nbsp; 1AM – 4AM</div>
+                    <div style="color:rgba(255,255,255,0.6);font-size:0.65rem;">3 hrs · sleeping</div>
+                  </div>
+                  <div style="width:100%;background:rgba(255,255,255,0.07);border-radius:10px;padding:10px 12px;margin-bottom:16px;">
+                    <div style="color:#34d399;font-size:0.75rem;font-weight:700;">YOU &nbsp; 4AM – 7AM</div>
+                    <div style="color:rgba(255,255,255,0.6);font-size:0.65rem;">3 hrs · upcoming</div>
+                  </div>
+                  <div style="color:rgba(255,255,255,0.35);font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Baby Log</div>
+                  <div style="width:100%;">
+                    <div style="display:flex;justify-content:space-between;color:rgba(255,255,255,0.75);font-size:0.7rem;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+                      <span>🍼 Feeding</span><span>12:04 AM</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;color:rgba(255,255,255,0.75);font-size:0.7rem;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+                      <span>👶 Diaper</span><span>11:47 PM</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;color:rgba(255,255,255,0.75);font-size:0.7rem;padding:5px 0;">
+                      <span>💤 Settled</span><span>11:30 PM</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          <!-- Apple Watch mockup -->
+          <div class="watch-container">
+            <div style="text-align:center;">
+              <div style="background:#1a1040;border-radius:28px;padding:16px 14px;display:inline-block;box-shadow:0 8px 32px rgba(59,47,110,0.4);border:3px solid #3b2f6e;">
+                <div style="color:#fdcc52;font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Mombie</div>
+                <div style="color:rgba(255,255,255,0.5);font-size:0.5rem;margin-bottom:2px;">Shift ends</div>
+                <div style="color:#fff;font-size:1.5rem;font-weight:900;">2:45</div>
+                <div style="color:rgba(255,255,255,0.4);font-size:0.48rem;margin-bottom:8px;">Wake Alex at 4AM</div>
+                <div style="background:#fdcc52;border-radius:8px;padding:4px 10px;color:#1a1040;font-size:0.5rem;font-weight:700;">LOG EVENT</div>
+              </div>
+              <div style="color:#888;font-size:0.75rem;margin-top:8px;">Apple Watch</div>
+            </div>
+          </div>
         </div>
+
+        <!-- Feature list -->
         <div class="col-lg-8 my-auto">
           <div class="container-fluid">
             <div class="row">
               <div class="col-lg-6">
                 <div class="feature-item">
-                  <i class="icon-screen-smartphone text-primary"></i>
-                  <h3>Device Mockups</h3>
-                  <p class="text-muted">Ready to use HTML/CSS device mockups, no Photoshop required!</p>
+                  <i class="icon-clock text-primary"></i>
+                  <h3>Smart Shift Scheduling</h3>
+                  <p class="text-muted">Set up nightly shift blocks in seconds. Mombie automatically wakes the right partner at the right time so the other one keeps sleeping.</p>
                 </div>
               </div>
               <div class="col-lg-6">
                 <div class="feature-item">
-                  <i class="icon-camera text-primary"></i>
-                  <h3>Flexible Use</h3>
-                  <p class="text-muted">Put an image, video, animation, or anything else in the screen!</p>
+                  <i class="icon-screen-smartphone text-primary"></i>
+                  <h3>Wrist Alerts, Not Alarms</h3>
+                  <p class="text-muted">Gentle haptic taps on Apple Watch or Wear OS notify the next partner without blaring alarms that wake everyone — including the baby.</p>
                 </div>
               </div>
             </div>
             <div class="row">
               <div class="col-lg-6">
                 <div class="feature-item">
-                  <i class="icon-present text-primary"></i>
-                  <h3>Free to Use</h3>
-                  <p class="text-muted">As always, this theme is free to download and use for any purpose!</p>
+                  <i class="icon-people text-primary"></i>
+                  <h3>Partner Sync</h3>
+                  <p class="text-muted">Both parents see the same schedule in real time. Log a feeding or diaper change and your partner's app updates instantly.</p>
                 </div>
               </div>
               <div class="col-lg-6">
                 <div class="feature-item">
-                  <i class="icon-lock-open text-primary"></i>
-                  <h3>Open Source</h3>
-                  <p class="text-muted">Since this theme is MIT licensed, you can use it commercially!</p>
+                  <i class="icon-note text-primary"></i>
+                  <h3>Baby Activity Log</h3>
+                  <p class="text-muted">Track feedings, diaper changes, and sleep with one tap — on your phone or your watch, even in the dark with one hand.</p>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="feature-item">
+                  <i class="icon-chart text-primary"></i>
+                  <h3>Sleep Insights</h3>
+                  <p class="text-muted">See how much rest each parent is actually getting over the week. Spot imbalances and rebalance shifts before exhaustion hits.</p>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="feature-item">
+                  <i class="icon-lock text-primary"></i>
+                  <h3>Private &amp; Offline First</h3>
+                  <p class="text-muted">All data syncs directly between your devices. No subscriptions, no third-party servers storing your family's information.</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   </section>
 
+  <!-- CTA -->
   <section class="cta">
     <div class="cta-content">
       <div class="container">
-        <h2>Stop waiting.<br>Start building.</h2>
-        <a href="#contact" class="btn btn-outline btn-xl js-scroll-trigger">Let's Get Started!</a>
+        <h2>You both deserve sleep.<br>Start sharing the night.</h2>
+        <a href="#download" class="btn btn-outline btn-xl js-scroll-trigger">Get Mombie Free</a>
       </div>
     </div>
     <div class="overlay"></div>
   </section>
 
+  <!-- Contact -->
   <section class="contact bg-primary" id="contact">
     <div class="container">
-      <h2>We
-        <i class="fas fa-heart"></i>
-        new friends!</h2>
+      <h2>Made with <i class="fas fa-heart"></i> for exhausted parents</h2>
       <ul class="list-inline list-social">
         <li class="list-inline-item social-twitter">
           <a href="#">
@@ -188,7 +335,7 @@
         </li>
         <li class="list-inline-item social-google-plus">
           <a href="#">
-            <i class="fab fa-google-plus-g"></i>
+            <i class="fab fa-instagram"></i>
           </a>
         </li>
       </ul>
@@ -197,7 +344,7 @@
 
   <footer>
     <div class="container">
-      <p>&copy; Your Website 2020. All Rights Reserved.</p>
+      <p>&copy; Mombie 2026. All Rights Reserved.</p>
       <ul class="list-inline">
         <li class="list-inline-item">
           <a href="#">Privacy</a>
