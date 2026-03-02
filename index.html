@@ -125,42 +125,82 @@
       width: 100%;
     }
 
-    /* Punch-hole camera */
+    /* Pixel 10 pill-shaped punch-hole camera */
     .pixel-phone .pixel-screen::before {
       content: '';
       position: absolute;
-      top: 10px;
+      top: 11px;
       left: 50%;
       transform: translateX(-50%);
-      width: 10px;
-      height: 10px;
+      width: 54px;
+      height: 13px;
       background: #0a0a0a;
-      border-radius: 50%;
+      border-radius: 7px;
       z-index: 10;
-      box-shadow: 0 0 0 2px #1c1c1e;
     }
 
-    /* Volume buttons (left side) */
+    /* Volume buttons (right side, above power — Pixel 10 style) */
     .pixel-phone::before {
       content: '';
       position: absolute;
-      left: -3px;
-      top: 80px;
+      right: -3px;
+      top: 72px;
       width: 3px;
-      height: 36px;
+      height: 52px;
       background: #2a2a2c;
-      border-radius: 4px 0 0 4px;
-      box-shadow: 0 50px 0 0 #2a2a2c;
+      border-radius: 0 4px 4px 0;
     }
 
-    /* Power button (right side) */
+    /* Power / fingerprint button (right side, below volume) */
     .pixel-phone::after {
       content: '';
       position: absolute;
       right: -3px;
-      top: 100px;
+      top: 140px;
       width: 3px;
-      height: 44px;
+      height: 36px;
+      background: #3a3a3c;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Pixel Watch 4 – circular */
+    .pixel-watch {
+      position: relative;
+      display: inline-block;
+      width: 130px;
+      height: 130px;
+      background: #1c1c1e;
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 2px #2c2c2e,
+        0 0 0 4px #0a0a0a,
+        0 12px 40px rgba(0,0,0,0.5);
+    }
+
+    .pixel-watch .watch-face {
+      position: absolute;
+      top: 7px;
+      left: 7px;
+      right: 7px;
+      bottom: 7px;
+      border-radius: 50%;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Crown button */
+    .pixel-watch::after {
+      content: '';
+      position: absolute;
+      right: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 5px;
+      height: 24px;
       background: #2a2a2c;
       border-radius: 0 4px 4px 0;
     }
@@ -238,11 +278,10 @@
     <div class="container">
       <div class="row">
         <div class="col-md-8 mx-auto">
-          <h2 class="section-heading">Free for iPhone &amp; Apple Watch</h2>
+          <h2 class="section-heading">Free for Android &amp; Pixel Watch</h2>
           <p>Download Mombie today. Set up your shift schedule in under two minutes and both of you get to sleep tonight.</p>
           <div class="badges">
             <a class="badge-link" href="#"><img src="img/google-play-badge.svg" alt="Get it on Google Play"></a>
-            <a class="badge-link" href="#"><img src="img/app-store-badge.svg" alt="Download on the App Store"></a>
           </div>
         </div>
       </div>
@@ -293,17 +332,19 @@
               </div>
             </div>
           </div>
-          <!-- Apple Watch mockup -->
+          <!-- Pixel Watch 4 mockup -->
           <div class="watch-container">
             <div style="text-align:center;">
-              <div style="background:#1a1040;border-radius:28px;padding:16px 14px;display:inline-block;box-shadow:0 8px 32px rgba(59,47,110,0.4);border:3px solid #3b2f6e;">
-                <div style="color:#fdcc52;font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Mombie</div>
-                <div style="color:rgba(255,255,255,0.5);font-size:0.5rem;margin-bottom:2px;">Shift ends</div>
-                <div style="color:#fff;font-size:1.5rem;font-weight:900;">2:45</div>
-                <div style="color:rgba(255,255,255,0.4);font-size:0.48rem;margin-bottom:8px;">Wake Alex at 4AM</div>
-                <div style="background:#fdcc52;border-radius:8px;padding:4px 10px;color:#1a1040;font-size:0.5rem;font-weight:700;">LOG EVENT</div>
+              <div class="pixel-watch">
+                <div class="watch-face">
+                  <div style="color:#fdcc52;font-size:0.45rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Mombie</div>
+                  <div style="color:rgba(255,255,255,0.45);font-size:0.42rem;margin-bottom:1px;">Shift ends</div>
+                  <div style="color:#fff;font-size:1.35rem;font-weight:900;line-height:1;">2:45</div>
+                  <div style="color:rgba(255,255,255,0.35);font-size:0.38rem;margin-bottom:6px;">Wake Alex · 4AM</div>
+                  <div style="background:#fdcc52;border-radius:6px;padding:3px 8px;color:#1a1040;font-size:0.38rem;font-weight:700;">LOG EVENT</div>
+                </div>
               </div>
-              <div style="color:#888;font-size:0.75rem;margin-top:8px;">Apple Watch</div>
+              <div style="color:#888;font-size:0.75rem;margin-top:8px;">Pixel Watch 4</div>
             </div>
           </div>
         </div>
@@ -323,7 +364,7 @@
                 <div class="feature-item">
                   <i class="icon-screen-smartphone text-primary"></i>
                   <h3>Wrist Alerts, Not Alarms</h3>
-                  <p class="text-muted">Gentle haptic taps on Apple Watch or Wear OS notify the next partner without blaring alarms that wake everyone — including the baby.</p>
+                  <p class="text-muted">Gentle haptic taps on Pixel Watch or Wear OS notify the next partner without blaring alarms that wake everyone — including the baby.</p>
                 </div>
               </div>
             </div>
