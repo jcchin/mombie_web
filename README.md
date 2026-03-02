@@ -1,5 +1,7 @@
 # Mombie – Survive the Night Together
 
+**[View Live Site](https://jcchin.github.io/mombie_web)**
+
 Splash page for **Mombie**, the mobile + smartwatch app that helps couples coordinate newborn night-shift schedules so both parents actually get to sleep.
 
 ## About
