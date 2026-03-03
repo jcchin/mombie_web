@@ -508,7 +508,7 @@
              onAuthStateChanged }                       from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js';
     import { getFirestore, doc, getDoc, setDoc,
              updateDoc, addDoc, collection,
-             query, orderBy, limit, getDocs,
+             query, where, orderBy, limit, getDocs,
              serverTimestamp, arrayUnion,
              writeBatch, Timestamp }                    from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
 
@@ -723,13 +723,13 @@
 
             await updateDoc(doc(db, 'families', familyId), { memberIds: arrayUnion(currentUser.uid) });
           } else {
-            // Create new family
+            // Create new family (can only write our own profile, not targetUid's —
+            // they'll pick up familyId on next login via the family membership check)
             familyId = [currentUser.uid, targetUid].sort().join('_');
             await setDoc(doc(db, 'families', familyId), {
               memberIds: [currentUser.uid, targetUid],
               createdAt: serverTimestamp()
             });
-            await updateDoc(doc(db, 'users', targetUid), { familyId });
           }
 
           await updateDoc(doc(db, 'users', currentUser.uid), { familyId });
@@ -1021,7 +1021,21 @@
         snap = await getDoc(userRef);
       }
 
-      const userData = snap.data();
+      let userData = snap.data();
+
+      // If this user was added to a family by someone else, their profile won't have
+      // familyId yet (we can't write other users' docs). Detect and self-heal on login.
+      if (!userData.familyId) {
+        const familySnap = await getDocs(
+          query(collection(db, 'families'), where('memberIds', 'array-contains', uid))
+        );
+        if (!familySnap.empty) {
+          const detectedFamilyId = familySnap.docs[0].id;
+          await updateDoc(userRef, { familyId: detectedFamilyId });
+          snap = await getDoc(userRef);
+          userData = snap.data();
+        }
+      }
 
       // Topbar
       const avatar = document.getElementById('topbar-avatar');
