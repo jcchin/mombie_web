@@ -713,6 +713,14 @@
           const targetData = targetSnap.data();
           let familyId     = targetData.familyId;
 
+          // Target user may not have self-healed their familyId yet — check directly
+          if (!familyId) {
+            const fSnap = await getDocs(
+              query(collection(db, 'families'), where('memberIds', 'array-contains', targetUid))
+            );
+            if (!fSnap.empty) familyId = fSnap.docs[0].id;
+          }
+
           if (familyId) {
             // Join existing family
             const familySnap = await getDoc(doc(db, 'families', familyId));
