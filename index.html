@@ -16,9 +16,12 @@
       google.accounts.id.initialize({
         client_id: '602679465402-9oj4t6a49v9bdo07ldo576nsk1uuipd4.apps.googleusercontent.com',
         callback: function (response) {
-          sessionStorage.setItem('mombie_credential', response.credential);
-          const base = window.location.href.split('?')[0].replace(/\/?$/, '/');
-          window.location.href = base + 'web_auth/';
+          // Firebase module may not be ready yet — store and let it pick up
+          if (window._mombieSignIn) {
+            window._mombieSignIn(response.credential);
+          } else {
+            window._mombieCredPending = response.credential;
+          }
         },
         auto_select: false
       });
@@ -504,6 +507,46 @@
 
   <!-- Custom scripts for this template -->
   <script src="js/new-age.min.js"></script>
+
+  <!-- Firebase sign-in: called by GIS callback -->
+  <script type="module">
+    import { initializeApp }                                from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
+    import { getAuth, GoogleAuthProvider, signInWithCredential } from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js';
+
+    const app  = initializeApp({
+      apiKey:            "AIzaSyCV9y8nj5TERbIpOX8IH0Cc3BBen36agHI",
+      authDomain:        "mombie-a56e8.firebaseapp.com",
+      projectId:         "mombie-a56e8",
+      storageBucket:     "mombie-a56e8.firebasestorage.app",
+      messagingSenderId: "754416028738",
+      appId:             "1:754416028738:web:d64ff3a591990c10bcb1db"
+    });
+    const auth = getAuth(app);
+
+    async function doSignIn(idToken) {
+      const errEl = document.getElementById('g_id_signin_hero');
+      try {
+        await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
+        const base = window.location.href.split('?')[0].replace(/\/?$/, '/');
+        window.location.href = base + 'web_auth/';
+      } catch (err) {
+        console.error('Firebase sign-in error:', err);
+        if (errEl) {
+          errEl.insertAdjacentHTML('afterend',
+            `<p style="color:#f87171;font-size:0.82rem;margin-top:8px;text-align:center">
+               Sign-in failed: ${err.code || err.message}
+             </p>`);
+        }
+      }
+    }
+
+    // Expose for GIS callback and handle any credential that arrived early
+    window._mombieSignIn = doSignIn;
+    if (window._mombieCredPending) {
+      doSignIn(window._mombieCredPending);
+      window._mombieCredPending = null;
+    }
+  </script>
 
 </body>
 

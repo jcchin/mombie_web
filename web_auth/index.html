@@ -391,7 +391,8 @@
   <script type="module">
     import { initializeApp }                           from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
     import { getAuth, GoogleAuthProvider,
-             signInWithCredential, signOut }            from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js';
+             signInWithCredential, signOut,
+             onAuthStateChanged }                       from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js';
     import { getFirestore, doc, getDoc, setDoc,
              updateDoc, addDoc, collection,
              query, orderBy, limit, getDocs,
@@ -689,12 +690,10 @@
     }
 
     // ── Entry point ────────────────────────────────────────
-    const raw = sessionStorage.getItem('mombie_credential');
-    if (!raw) {
-      window.location.href = '../';
-    } else {
-      signInWithCredential(auth, GoogleAuthProvider.credential(raw))
-        .then(r => startApp(r.user).catch(appErr => {
+    // Firebase persists auth state — just wait for it to resolve
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        startApp(user).catch(appErr => {
           console.error('startApp error:', appErr);
           hideLoading();
           document.querySelector('.dashboard').insertAdjacentHTML('afterbegin',
@@ -702,18 +701,12 @@
                <h5 style="color:#f87171">⚠ App Error</h5>
                <p style="font-size:0.85rem;color:#fca5a5;margin:0">${appErr.code || appErr.message}</p>
              </div>`);
-        }))
-        .catch(authErr => {
-          console.error('Auth error:', authErr);
-          hideLoading();
-          document.querySelector('.dashboard').insertAdjacentHTML('afterbegin',
-            `<div class="card-dark" style="border-color:#f87171">
-               <h5 style="color:#f87171">⚠ Sign-in Failed</h5>
-               <p style="font-size:0.85rem;color:#fca5a5;margin:0">${authErr.code || authErr.message}</p>
-               <a href="../" style="color:var(--gold);font-size:0.82rem;">← Try again</a>
-             </div>`);
         });
-    }
+      } else {
+        // Not signed in — go back to splash
+        window.location.href = '../';
+      }
+    });
   </script>
 
 </body>
