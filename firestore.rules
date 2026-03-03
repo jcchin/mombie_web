@@ -29,8 +29,8 @@ service cloud.firestore {
       allow update: if request.auth != null &&
                       request.auth.uid in resource.data.memberIds &&
                       request.resource.data.memberIds.size() <= 6 &&
-                      // existing members cannot be removed
-                      resource.data.memberIds.toSet().hasAll(request.resource.data.memberIds.toSet().difference(resource.data.memberIds.toSet()) == [] ? resource.data.memberIds : resource.data.memberIds);
+                      // existing members cannot be removed — new list must contain all old members
+                      request.resource.data.memberIds.toSet().hasAll(resource.data.memberIds.toSet());
     }
 
     // Baby logs — owner writes; all family members can read
