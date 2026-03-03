@@ -10,7 +10,7 @@
 
   <title>Mombie – Survive the Night Together</title>
 
-  <!-- Google Identity Services — onGoogleLibraryLoad fires after library is ready -->
+  <!-- Google Identity Services -->
   <script>
     window.onGoogleLibraryLoad = function () {
       google.accounts.id.initialize({
@@ -22,10 +22,19 @@
         },
         auto_select: false
       });
-      google.accounts.id.renderButton(
-        document.getElementById('g_id_signin'),
-        { theme: 'outline', size: 'medium', shape: 'pill', text: 'sign_in_with' }
-      );
+
+      function renderButtons() {
+        var navBtn  = document.getElementById('g_id_signin');
+        var heroBtn = document.getElementById('g_id_signin_hero');
+        if (navBtn)  google.accounts.id.renderButton(navBtn,  { theme: 'outline',     size: 'medium', shape: 'pill', text: 'sign_in_with' });
+        if (heroBtn) google.accounts.id.renderButton(heroBtn, { theme: 'filled_blue', size: 'large',  shape: 'pill', text: 'sign_in_with', width: 280 });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderButtons);
+      } else {
+        renderButtons();
+      }
     };
   </script>
   <script src="https://accounts.google.com/gsi/client" async></script>
@@ -253,14 +262,7 @@
             <a class="nav-link js-scroll-trigger" href="#contact">Contact</a>
           </li>
           <li class="nav-item ms-lg-3 d-flex align-items-center">
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-size="medium"
-                 data-theme="outline"
-                 data-text="sign_in_with"
-                 data-shape="pill"
-                 data-logo_alignment="left">
-            </div>
+            <div id="g_id_signin"></div>
           </li>
         </ul>
       </div>
@@ -277,6 +279,10 @@
             <h1 class="mb-5">Take turns.<br>Get rest.<br>Survive the newborn nights — together.</h1>
             <p class="mb-5" style="color:rgba(255,255,255,0.85);font-size:1.1rem;">Mombie coordinates night-shift schedules between partners so both of you actually get to sleep. Gentle smartwatch alerts wake the right parent at the right time — without disturbing anyone else.</p>
             <a href="#download" class="btn btn-outline btn-xl js-scroll-trigger">Download Free</a>
+            <div class="mt-3 d-flex align-items-center gap-2">
+              <span style="color:rgba(255,255,255,0.6);font-size:0.85rem;">Or sign in to manage your family:</span>
+            </div>
+            <div id="g_id_signin_hero" class="mt-2"></div>
           </div>
         </div>
         <div class="col-lg-5 my-auto">
