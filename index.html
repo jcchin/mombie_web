@@ -10,6 +10,9 @@
 
   <title>Mombie – Survive the Night Together</title>
 
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async></script>
+
   <!-- Bootstrap core CSS -->
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
@@ -231,6 +234,16 @@
           </li>
           <li class="nav-item">
             <a class="nav-link js-scroll-trigger" href="#contact">Contact</a>
+          </li>
+          <li class="nav-item ms-lg-3 d-flex align-items-center">
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="medium"
+                 data-theme="outline"
+                 data-text="sign_in_with"
+                 data-shape="pill"
+                 data-logo_alignment="left">
+            </div>
           </li>
         </ul>
       </div>
@@ -458,6 +471,20 @@
       </ul>
     </div>
   </footer>
+
+  <!-- Google Sign-In initializer (hidden, drives One Tap + button) -->
+  <div id="g_id_onload"
+       data-client_id="602679465402-9oj4t6a49v9bdo07ldo576nsk1uuipd4.apps.googleusercontent.com"
+       data-callback="handleGoogleSignIn"
+       data-auto_prompt="false">
+  </div>
+
+  <script>
+    function handleGoogleSignIn(response) {
+      sessionStorage.setItem('mombie_credential', response.credential);
+      window.location.href = 'web_auth/';
+    }
+  </script>
 
   <!-- Bootstrap core JavaScript -->
   <script src="vendor/jquery/jquery.min.js"></script>
