@@ -694,10 +694,24 @@
       window.location.href = '../';
     } else {
       signInWithCredential(auth, GoogleAuthProvider.credential(raw))
-        .then(r => startApp(r.user))
-        .catch(() => {
-          sessionStorage.removeItem('mombie_credential');
-          window.location.href = '../';
+        .then(r => startApp(r.user).catch(appErr => {
+          console.error('startApp error:', appErr);
+          hideLoading();
+          document.querySelector('.dashboard').insertAdjacentHTML('afterbegin',
+            `<div class="card-dark" style="border-color:#f87171">
+               <h5 style="color:#f87171">⚠ App Error</h5>
+               <p style="font-size:0.85rem;color:#fca5a5;margin:0">${appErr.code || appErr.message}</p>
+             </div>`);
+        }))
+        .catch(authErr => {
+          console.error('Auth error:', authErr);
+          hideLoading();
+          document.querySelector('.dashboard').insertAdjacentHTML('afterbegin',
+            `<div class="card-dark" style="border-color:#f87171">
+               <h5 style="color:#f87171">⚠ Sign-in Failed</h5>
+               <p style="font-size:0.85rem;color:#fca5a5;margin:0">${authErr.code || authErr.message}</p>
+               <a href="../" style="color:var(--gold);font-size:0.82rem;">← Try again</a>
+             </div>`);
         });
     }
   </script>
