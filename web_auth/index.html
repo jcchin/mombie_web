@@ -4,176 +4,633 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Mombie – Welcome</title>
+  <title>Mombie – Dashboard</title>
 
   <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="../vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Catamaran:700,900&family=Muli" rel="stylesheet">
 
   <style>
-    * { box-sizing: border-box; }
+    :root {
+      --mombie-indigo: #3b2f6e;
+      --mombie-purple: #7b4397;
+      --mombie-gold: #fdcc52;
+    }
 
     body {
-      margin: 0;
       min-height: 100vh;
       background: linear-gradient(160deg, #1a1040 0%, #3b2f6e 60%, #7b4397 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       font-family: 'Muli', sans-serif;
       color: #fff;
     }
 
-    .auth-card {
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 24px;
-      padding: 3rem 2.5rem;
-      max-width: 420px;
-      width: 90%;
-      text-align: center;
-      backdrop-filter: blur(12px);
+    /* ── Topbar ── */
+    .topbar {
+      background: rgba(0,0,0,0.25);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-
-    .app-logo {
-      width: 72px;
-      height: 72px;
-      border-radius: 18px;
-      margin-bottom: 1.2rem;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    }
-
-    .avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      border: 3px solid #fdcc52;
-      margin-bottom: 1rem;
-      display: none;
-    }
-
-    .app-name {
+    .topbar .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-family: 'Catamaran', sans-serif;
       font-weight: 900;
-      font-size: 1.1rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: #fdcc52;
-      margin-bottom: 0.2rem;
+      font-size: 1.2rem;
+      color: var(--mombie-gold);
+      text-decoration: none;
     }
-
-    h1 {
-      font-family: 'Catamaran', sans-serif;
-      font-weight: 700;
-      font-size: 1.8rem;
-      margin-bottom: 0.4rem;
+    .topbar .brand img {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
     }
-
-    .user-email {
-      color: rgba(255,255,255,0.55);
-      font-size: 0.9rem;
-      margin-bottom: 1.8rem;
-    }
-
-    .status-badge {
-      display: inline-flex;
+    .topbar .user-info {
+      display: flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(253,204,82,0.15);
-      border: 1px solid rgba(253,204,82,0.4);
-      border-radius: 20px;
-      padding: 6px 16px;
-      font-size: 0.85rem;
-      color: #fdcc52;
-      margin-bottom: 2rem;
+      gap: 10px;
     }
-
-    .sign-out-btn {
+    .topbar .user-info img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--mombie-gold);
+    }
+    .topbar .user-info span {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.8);
+    }
+    .btn-signout {
       background: transparent;
-      border: 1px solid rgba(255,255,255,0.3);
+      border: 1px solid rgba(255,255,255,0.25);
       color: rgba(255,255,255,0.6);
-      border-radius: 20px;
-      padding: 8px 20px;
-      font-size: 0.8rem;
+      border-radius: 16px;
+      padding: 5px 14px;
+      font-size: 0.78rem;
       cursor: pointer;
       transition: all 0.2s;
-      text-decoration: none;
-      display: inline-block;
     }
-    .sign-out-btn:hover {
-      border-color: rgba(255,255,255,0.6);
-      color: #fff;
+    .btn-signout:hover { border-color: rgba(255,255,255,0.6); color: #fff; }
+
+    /* ── Cards ── */
+    .dashboard { max-width: 720px; margin: 0 auto; padding: 28px 16px 60px; }
+
+    .card-dark {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 1.5rem;
+      margin-bottom: 1.2rem;
+      backdrop-filter: blur(6px);
+    }
+    .card-dark h5 {
+      font-family: 'Catamaran', sans-serif;
+      font-weight: 700;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 1rem;
     }
 
-    #loading {
-      color: rgba(255,255,255,0.5);
+    /* ── Partner card ── */
+    .partner-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255,255,255,0.7);
       font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .partner-status .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #6b7280;
+      flex-shrink: 0;
+    }
+    .partner-status.paired .dot { background: #34d399; }
+
+    .invite-code-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .invite-code-box .code {
+      font-family: 'Catamaran', sans-serif;
+      font-weight: 900;
+      font-size: 1.6rem;
+      letter-spacing: 0.3em;
+      color: var(--mombie-gold);
+    }
+    .btn-copy {
+      background: rgba(253,204,82,0.15);
+      border: 1px solid rgba(253,204,82,0.35);
+      color: var(--mombie-gold);
+      border-radius: 10px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .btn-copy:hover { background: rgba(253,204,82,0.25); }
+
+    .connect-form { display: flex; gap: 8px; margin-top: 12px; }
+    .connect-form input {
+      flex: 1;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-family: 'Catamaran', sans-serif;
+      font-weight: 700;
+    }
+    .connect-form input::placeholder { color: rgba(255,255,255,0.3); letter-spacing: 0; font-weight: 400; text-transform: none; }
+    .connect-form input:focus { outline: none; border-color: var(--mombie-gold); }
+    .btn-connect {
+      background: var(--mombie-gold);
+      border: none;
+      color: #1a1040;
+      border-radius: 10px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-connect:hover { opacity: 0.85; }
+    .btn-connect:disabled { opacity: 0.4; cursor: default; }
+
+    .paired-partner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .paired-partner img {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 2px solid #34d399;
+    }
+    .paired-partner .partner-name {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .paired-partner .partner-email {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.5);
     }
 
-    #content { display: none; }
+    /* ── Log buttons ── */
+    .log-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .btn-log {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 18px 8px;
+      color: #fff;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-log:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); }
+    .btn-log:active { transform: scale(0.96); }
+    .btn-log .log-icon { font-size: 1.6rem; }
+    .btn-log.feeding  { border-color: rgba(253,204,82,0.35); }
+    .btn-log.diaper   { border-color: rgba(147,197,253,0.35); }
+    .btn-log.sleep    { border-color: rgba(167,139,250,0.35); }
+    .btn-log.feeding:hover  { background: rgba(253,204,82,0.12); }
+    .btn-log.diaper:hover   { background: rgba(147,197,253,0.12); }
+    .btn-log.sleep:hover    { background: rgba(167,139,250,0.12); }
+
+    /* ── Activity feed ── */
+    .activity-entry {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .activity-entry:last-child { border-bottom: none; }
+    .activity-icon { font-size: 1.3rem; width: 32px; text-align: center; flex-shrink: 0; }
+    .activity-meta { flex: 1; }
+    .activity-type { font-size: 0.88rem; font-weight: 700; }
+    .activity-author { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
+    .activity-time { font-size: 0.72rem; color: rgba(255,255,255,0.35); white-space: nowrap; }
+
+    /* ── Toast ── */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(30,20,60,0.95);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      color: #fff;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast-msg.show { opacity: 1; }
+
+    /* ── Loading overlay ── */
+    #loading-overlay {
+      position: fixed; inset: 0;
+      background: #1a1040;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999;
+      transition: opacity 0.4s;
+    }
+    #loading-overlay.fade { opacity: 0; pointer-events: none; }
+    .spinner { color: var(--mombie-gold); font-size: 2rem; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .msg-empty { color: rgba(255,255,255,0.3); font-size: 0.85rem; text-align: center; padding: 16px 0; }
+    .msg-error { color: #f87171; font-size: 0.82rem; margin-top: 6px; }
   </style>
 </head>
 
 <body>
-  <div class="auth-card">
-    <img class="app-logo"
-         src="https://raw.githubusercontent.com/jcchin/mombie_flutter/master/assets/images/icon.png"
-         alt="Mombie">
-    <div class="app-name">Mombie</div>
 
-    <div id="loading">Verifying sign-in…</div>
+  <div id="loading-overlay">
+    <i class="fas fa-moon spinner"></i>
+  </div>
 
-    <div id="content">
-      <img id="avatar" class="avatar" alt="Profile photo">
-      <h1 id="user-name">Welcome</h1>
-      <div id="user-email" class="user-email"></div>
-      <div class="status-badge">
-        <i class="fas fa-check-circle"></i>
-        Signed in with Google
-      </div>
-      <br>
-      <a href="../" class="sign-out-btn" id="sign-out">
-        <i class="fas fa-arrow-left"></i> Back to Mombie
-      </a>
+  <!-- Topbar -->
+  <div class="topbar">
+    <a class="brand" href="../">
+      <img src="https://raw.githubusercontent.com/jcchin/mombie_flutter/master/assets/images/icon.png" alt="Mombie">
+      Mombie
+    </a>
+    <div class="user-info">
+      <img id="topbar-avatar" src="" alt="" style="display:none">
+      <span id="topbar-name"></span>
+      <button class="btn-signout" id="btn-signout">Sign out</button>
     </div>
   </div>
 
-  <script>
-    function parseJwt(token) {
-      const payload = token.split('.')[1];
-      const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-      return JSON.parse(decodeURIComponent(
-        decoded.split('').map(c =>
-          '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-        ).join('')
-      ));
+  <!-- Dashboard -->
+  <div class="dashboard">
+
+    <!-- Partner card -->
+    <div class="card-dark">
+      <h5><i class="fas fa-heart me-1"></i> Partner</h5>
+      <div id="partner-section">
+        <div class="partner-status" id="partner-status-line">
+          <div class="dot"></div>
+          <span>Not paired yet</span>
+        </div>
+        <p style="font-size:0.82rem;color:rgba(255,255,255,0.45);margin-bottom:1rem;">
+          Share your invite code with your partner, or enter theirs below.
+        </p>
+        <div class="invite-code-box">
+          <div class="code" id="invite-code">––––––</div>
+          <button class="btn-copy" id="btn-copy-code">
+            <i class="fas fa-copy me-1"></i>Copy
+          </button>
+        </div>
+        <div class="connect-form" id="connect-form">
+          <input type="text" id="partner-code-input" placeholder="Enter partner's code" maxlength="6">
+          <button class="btn-connect" id="btn-connect">Connect</button>
+        </div>
+        <div class="msg-error" id="connect-error" style="display:none"></div>
+      </div>
+      <div id="partner-paired" style="display:none">
+        <div class="partner-status paired">
+          <div class="dot"></div>
+          <span>Paired</span>
+        </div>
+        <div class="paired-partner">
+          <img id="partner-avatar" src="" alt="">
+          <div>
+            <div class="partner-name" id="partner-name"></div>
+            <div class="partner-email" id="partner-email"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log a baby event -->
+    <div class="card-dark">
+      <h5><i class="fas fa-baby me-1"></i> Log Baby Event</h5>
+      <div class="log-buttons">
+        <button class="btn-log feeding" data-type="feeding">
+          <span class="log-icon">🍼</span>
+          Feeding
+        </button>
+        <button class="btn-log diaper" data-type="diaper">
+          <span class="log-icon">👶</span>
+          Diaper
+        </button>
+        <button class="btn-log sleep" data-type="sleep">
+          <span class="log-icon">💤</span>
+          Sleep
+        </button>
+      </div>
+    </div>
+
+    <!-- Recent activity -->
+    <div class="card-dark">
+      <h5><i class="fas fa-list me-1"></i> Recent Activity</h5>
+      <div id="activity-feed">
+        <div class="msg-empty">No events logged yet.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast-msg" id="toast"></div>
+
+  <script type="module">
+    import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
+    import { getAuth, GoogleAuthProvider,
+             signInWithCredential, signOut,
+             onAuthStateChanged }                     from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js';
+    import { getFirestore, doc, getDoc, setDoc,
+             updateDoc, addDoc, collection,
+             query, orderBy, limit, getDocs,
+             serverTimestamp, where }                 from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
+
+    // ── Firebase init ──────────────────────────────────────
+    const app = initializeApp({
+      apiKey:            "AIzaSyCV9y8nj5TERbIpOX8IH0Cc3BBen36agHI",
+      authDomain:        "mombie-a56e8.firebaseapp.com",
+      projectId:         "mombie-a56e8",
+      storageBucket:     "mombie-a56e8.firebasestorage.app",
+      messagingSenderId: "754416028738",
+      appId:             "1:754416028738:web:d64ff3a591990c10bcb1db"
+    });
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // ── Helpers ────────────────────────────────────────────
+    function randomCode() {
+      return Math.random().toString(36).substring(2, 8).toUpperCase();
     }
 
-    const credential = sessionStorage.getItem('mombie_credential');
+    function timeAgo(ts) {
+      if (!ts) return '';
+      const diff = Math.floor((Date.now() - ts.toMillis()) / 1000);
+      if (diff < 60)   return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return `${Math.floor(diff / 86400)}d ago`;
+    }
 
-    if (!credential) {
-      window.location.href = '../';
-    } else {
-      const user = parseJwt(credential);
+    const LOG_META = {
+      feeding: { icon: '🍼', label: 'Feeding' },
+      diaper:  { icon: '👶', label: 'Diaper'  },
+      sleep:   { icon: '💤', label: 'Sleep'   }
+    };
 
-      document.getElementById('user-name').textContent = 'Hi, ' + (user.given_name || user.name) + '!';
-      document.getElementById('user-email').textContent = user.email;
+    function showToast(msg, duration = 2500) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), duration);
+    }
 
-      if (user.picture) {
-        const avatar = document.getElementById('avatar');
-        avatar.src = user.picture;
-        avatar.style.display = 'inline-block';
+    function hideLoading() {
+      const overlay = document.getElementById('loading-overlay');
+      overlay.classList.add('fade');
+      setTimeout(() => overlay.remove(), 400);
+    }
+
+    // ── Render activity feed ───────────────────────────────
+    async function loadActivity(currentUser, coupleId) {
+      const feed = document.getElementById('activity-feed');
+      const uids = [currentUser.uid];
+
+      let partnerUid = null;
+      if (coupleId) {
+        const coupleSnap = await getDoc(doc(db, 'couples', coupleId));
+        if (coupleSnap.exists()) {
+          partnerUid = coupleSnap.data().memberIds.find(id => id !== currentUser.uid);
+          if (partnerUid) uids.push(partnerUid);
+        }
       }
 
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('content').style.display = 'block';
+      // Fetch logs from all relevant users
+      const allEntries = [];
+      for (const uid of uids) {
+        const q = query(
+          collection(db, 'babyLogs', uid, 'entries'),
+          orderBy('timestamp', 'desc'),
+          limit(20)
+        );
+        const snap = await getDocs(q);
+        snap.forEach(d => allEntries.push({ id: d.id, uid, ...d.data() }));
+      }
 
-      document.getElementById('sign-out').addEventListener('click', function () {
+      // Sort merged results by timestamp descending, keep top 15
+      allEntries.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+      const entries = allEntries.slice(0, 15);
+
+      if (!entries.length) {
+        feed.innerHTML = '<div class="msg-empty">No events logged yet.</div>';
+        return;
+      }
+
+      feed.innerHTML = entries.map(e => {
+        const meta = LOG_META[e.type] || { icon: '❓', label: e.type };
+        const isMe = e.uid === currentUser.uid;
+        return `
+          <div class="activity-entry">
+            <div class="activity-icon">${meta.icon}</div>
+            <div class="activity-meta">
+              <div class="activity-type">${meta.label}</div>
+              <div class="activity-author">${isMe ? 'You' : (e.authorName || 'Partner')}</div>
+            </div>
+            <div class="activity-time">${timeAgo(e.timestamp)}</div>
+          </div>`;
+      }).join('');
+    }
+
+    // ── Render partner section ─────────────────────────────
+    async function loadPartner(currentUserDoc, coupleId) {
+      if (!coupleId) return;
+
+      const coupleSnap = await getDoc(doc(db, 'couples', coupleId));
+      if (!coupleSnap.exists()) return;
+
+      const partnerUid = coupleSnap.data().memberIds.find(id => id !== currentUserDoc.uid);
+      if (!partnerUid) return;
+
+      const partnerSnap = await getDoc(doc(db, 'users', partnerUid));
+      if (!partnerSnap.exists()) return;
+
+      const p = partnerSnap.data();
+      document.getElementById('partner-section').style.display = 'none';
+      const paired = document.getElementById('partner-paired');
+      paired.style.display = 'block';
+      document.getElementById('partner-name').textContent  = p.name;
+      document.getElementById('partner-email').textContent = p.email;
+      const avatar = document.getElementById('partner-avatar');
+      if (p.photo) { avatar.src = p.photo; } else { avatar.style.display = 'none'; }
+    }
+
+    // ── Main app ───────────────────────────────────────────
+    async function startApp(firebaseUser) {
+      const uid = firebaseUser.uid;
+
+      // Load or create user profile
+      const userRef = doc(db, 'users', uid);
+      let userSnap  = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        const inviteCode = randomCode();
+        await setDoc(userRef, {
+          name:      firebaseUser.displayName,
+          email:     firebaseUser.email,
+          photo:     firebaseUser.photoURL,
+          createdAt: serverTimestamp(),
+          coupleId:  null,
+          inviteCode
+        });
+        // Register invite code
+        await setDoc(doc(db, 'inviteCodes', inviteCode), { uid });
+        userSnap = await getDoc(userRef);
+      }
+
+      const userData = userSnap.data();
+
+      // Topbar
+      const topAvatar = document.getElementById('topbar-avatar');
+      if (firebaseUser.photoURL) {
+        topAvatar.src = firebaseUser.photoURL;
+        topAvatar.style.display = 'inline-block';
+      }
+      document.getElementById('topbar-name').textContent = firebaseUser.displayName || firebaseUser.email;
+
+      // Invite code display
+      document.getElementById('invite-code').textContent = userData.inviteCode || '––––––';
+
+      // Copy code
+      document.getElementById('btn-copy-code').addEventListener('click', () => {
+        navigator.clipboard.writeText(userData.inviteCode || '').then(() => showToast('Code copied!'));
+      });
+
+      // Load partner + activity
+      await Promise.all([
+        loadPartner(userData, userData.coupleId),
+        loadActivity(firebaseUser, userData.coupleId)
+      ]);
+
+      hideLoading();
+
+      // Connect partner
+      const connectBtn = document.getElementById('btn-connect');
+      const connectErr = document.getElementById('connect-error');
+      connectBtn.addEventListener('click', async () => {
+        const code = document.getElementById('partner-code-input').value.trim().toUpperCase();
+        if (!code || code.length !== 6) {
+          connectErr.textContent = 'Enter a valid 6-character code.';
+          connectErr.style.display = 'block';
+          return;
+        }
+        if (code === userData.inviteCode) {
+          connectErr.textContent = "That's your own code!";
+          connectErr.style.display = 'block';
+          return;
+        }
+        connectBtn.disabled = true;
+        connectErr.style.display = 'none';
+        try {
+          const codeSnap = await getDoc(doc(db, 'inviteCodes', code));
+          if (!codeSnap.exists()) throw new Error('Code not found.');
+          const partnerUid = codeSnap.data().uid;
+          if (partnerUid === uid) throw new Error("That's your own code!");
+
+          const coupleId = [uid, partnerUid].sort().join('_');
+          await setDoc(doc(db, 'couples', coupleId), {
+            memberIds: [uid, partnerUid],
+            createdAt: serverTimestamp()
+          });
+          await Promise.all([
+            updateDoc(doc(db, 'users', uid), { coupleId }),
+            updateDoc(doc(db, 'users', partnerUid), { coupleId })
+          ]);
+          showToast('Partner connected! 🎉', 3000);
+          setTimeout(() => location.reload(), 1500);
+        } catch (e) {
+          connectErr.textContent = e.message || 'Could not connect. Try again.';
+          connectErr.style.display = 'block';
+          connectBtn.disabled = false;
+        }
+      });
+
+      // Log baby events
+      document.querySelectorAll('.btn-log').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const type = btn.dataset.type;
+          btn.style.opacity = '0.5';
+          try {
+            await addDoc(collection(db, 'babyLogs', uid, 'entries'), {
+              type,
+              timestamp:  serverTimestamp(),
+              authorId:   uid,
+              authorName: firebaseUser.displayName || firebaseUser.email
+            });
+            showToast(`${LOG_META[type].icon} ${LOG_META[type].label} logged!`);
+            await loadActivity(firebaseUser, userData.coupleId);
+          } catch (e) {
+            showToast('Could not save. Check Firestore rules.');
+          } finally {
+            btn.style.opacity = '1';
+          }
+        });
+      });
+
+      // Sign out
+      document.getElementById('btn-signout').addEventListener('click', async () => {
+        await signOut(auth);
         sessionStorage.removeItem('mombie_credential');
+        window.location.href = '../';
       });
     }
-  </script>
-</body>
 
+    // ── Entry point ────────────────────────────────────────
+    const rawCredential = sessionStorage.getItem('mombie_credential');
+    if (!rawCredential) {
+      window.location.href = '../';
+    } else {
+      const googleCredential = GoogleAuthProvider.credential(rawCredential);
+      signInWithCredential(auth, googleCredential)
+        .then(result => startApp(result.user))
+        .catch(() => {
+          // Credential expired — re-auth via splash
+          sessionStorage.removeItem('mombie_credential');
+          window.location.href = '../';
+        });
+    }
+  </script>
+
+</body>
 </html>
