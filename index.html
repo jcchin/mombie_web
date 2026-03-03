@@ -10,7 +10,24 @@
 
   <title>Mombie – Survive the Night Together</title>
 
-  <!-- Google Identity Services -->
+  <!-- Google Identity Services — onGoogleLibraryLoad fires after library is ready -->
+  <script>
+    window.onGoogleLibraryLoad = function () {
+      google.accounts.id.initialize({
+        client_id: '602679465402-9oj4t6a49v9bdo07ldo576nsk1uuipd4.apps.googleusercontent.com',
+        callback: function (response) {
+          sessionStorage.setItem('mombie_credential', response.credential);
+          const base = window.location.href.split('?')[0].replace(/\/?$/, '/');
+          window.location.href = base + 'web_auth/';
+        },
+        auto_select: false
+      });
+      google.accounts.id.renderButton(
+        document.getElementById('g_id_signin'),
+        { theme: 'outline', size: 'medium', shape: 'pill', text: 'sign_in_with' }
+      );
+    };
+  </script>
   <script src="https://accounts.google.com/gsi/client" async></script>
 
   <!-- Bootstrap core CSS -->
@@ -471,21 +488,6 @@
       </ul>
     </div>
   </footer>
-
-  <!-- Google Sign-In initializer (hidden, drives One Tap + button) -->
-  <div id="g_id_onload"
-       data-client_id="602679465402-9oj4t6a49v9bdo07ldo576nsk1uuipd4.apps.googleusercontent.com"
-       data-callback="handleGoogleSignIn"
-       data-auto_prompt="false">
-  </div>
-
-  <script>
-    function handleGoogleSignIn(response) {
-      sessionStorage.setItem('mombie_credential', response.credential);
-      const base = window.location.href.split('?')[0].replace(/\/?$/, '/');
-      window.location.href = base + 'web_auth/';
-    }
-  </script>
 
   <!-- Bootstrap core JavaScript -->
   <script src="vendor/jquery/jquery.min.js"></script>
