@@ -482,7 +482,8 @@
   <script>
     function handleGoogleSignIn(response) {
       sessionStorage.setItem('mombie_credential', response.credential);
-      window.location.href = 'web_auth/';
+      const base = window.location.href.split('?')[0].replace(/\/?$/, '/');
+      window.location.href = base + 'web_auth/';
     }
   </script>
 
