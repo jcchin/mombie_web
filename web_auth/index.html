@@ -764,11 +764,12 @@
         importBtn.textContent = 'Importing…';
         errEl.style.display = 'none';
         try {
-          // Batch write in chunks of 499 (Firestore limit is 500 ops/batch)
+          // Deterministic doc ID = uid_type_startMs → re-uploading same row is a no-op
           for (let i = 0; i < pending.length; i += 499) {
             const batch = writeBatch(db);
             pending.slice(i, i + 499).forEach(entry => {
-              batch.set(doc(collection(db, 'babyLogs', currentUser.uid, 'entries')), entry);
+              const id  = `${currentUser.uid}_${entry.type}_${entry.timestamp.toMillis()}`;
+              batch.set(doc(db, 'babyLogs', currentUser.uid, 'entries', id), entry);
             });
             await batch.commit();
           }
