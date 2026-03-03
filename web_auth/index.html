@@ -291,6 +291,21 @@
     .msg-error { color: #f87171; font-size: 0.82rem; margin-top: 8px; }
     .msg-hint  { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-bottom: 0.8rem; }
     .family-full { font-size: 0.8rem; color: #34d399; }
+
+    /* ── CSV import ── */
+    .csv-pick-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .btn-csv-pick {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px; padding: 8px 16px;
+      font-size: 0.85rem; color: #fff; cursor: pointer;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-csv-pick:hover { background: rgba(255,255,255,0.14); }
+    .csv-filename { font-size: 0.8rem; color: rgba(255,255,255,0.45); }
+    .csv-preview-row { display: none; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+    .csv-count { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
   </style>
 </head>
 
@@ -376,6 +391,27 @@
       </div>
     </div>
 
+    <!-- CSV import -->
+    <div class="card-dark">
+      <h5><i class="fas fa-file-import me-1"></i> Import from CSV</h5>
+      <p class="msg-hint" style="margin-bottom:1rem;">
+        Expected columns: <strong style="color:rgba(255,255,255,0.6)">Activity Type, Start, End, Duration, Details</strong><br>
+        Activity types: Feed, Diaper, Meds, Tummy Time, Bath, Sleep
+      </p>
+      <div class="csv-pick-row">
+        <label class="btn-csv-pick" for="csv-input">
+          <i class="fas fa-folder-open"></i> Choose file…
+        </label>
+        <input type="file" id="csv-input" accept=".csv,.txt" style="display:none">
+        <span class="csv-filename" id="csv-filename"></span>
+      </div>
+      <div class="csv-preview-row" id="csv-preview-row">
+        <span class="csv-count" id="csv-count"></span>
+        <button class="btn-connect" id="btn-csv-import">Import</button>
+      </div>
+      <div class="msg-error" id="csv-error" style="display:none"></div>
+    </div>
+
     <!-- Recent activity -->
     <div class="card-dark">
       <h5><i class="fas fa-list me-1"></i> Recent Activity</h5>
@@ -396,7 +432,8 @@
     import { getFirestore, doc, getDoc, setDoc,
              updateDoc, addDoc, collection,
              query, orderBy, limit, getDocs,
-             serverTimestamp, arrayUnion }              from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
+             serverTimestamp, arrayUnion,
+             writeBatch, Timestamp }                    from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
 
     const FAMILY_MAX = 6;
 
@@ -431,9 +468,13 @@
     }
 
     const LOG_META = {
-      feeding: { icon: '🍼', label: 'Feeding' },
-      diaper:  { icon: '👶', label: 'Diaper'  },
-      sleep:   { icon: '💤', label: 'Sleep'   }
+      feeding:    { icon: '🍼', label: 'Feeding'    },
+      feed:       { icon: '🍼', label: 'Feeding'    },
+      diaper:     { icon: '👶', label: 'Diaper'     },
+      meds:       { icon: '💊', label: 'Meds'       },
+      tummy_time: { icon: '⏱', label: 'Tummy Time' },
+      bath:       { icon: '🛁', label: 'Bath'       },
+      sleep:      { icon: '💤', label: 'Sleep'      },
     };
 
     function showToast(msg, ms = 2500) {
@@ -625,6 +666,127 @@
       });
     }
 
+    // ── CSV import ─────────────────────────────────────────
+    const CSV_TYPE_MAP = {
+      'feed': 'feed', 'feeding': 'feed',
+      'diaper': 'diaper',
+      'meds': 'meds', 'medication': 'meds', 'medications': 'meds',
+      'tummy time': 'tummy_time', 'tummy_time': 'tummy_time', 'tummytime': 'tummy_time',
+      'bath': 'bath', 'bathe': 'bath',
+      'sleep': 'sleep',
+    };
+
+    function parseCSVRow(line) {
+      const cols = []; let cur = ''; let inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+        else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
+        else cur += c;
+      }
+      cols.push(cur);
+      return cols;
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) return [];
+      const headers = parseCSVRow(lines[0]).map(h => h.trim().toLowerCase());
+      return lines.slice(1).map(line => {
+        const cols = parseCSVRow(line);
+        const row = {};
+        headers.forEach((h, i) => { row[h] = (cols[i] || '').trim(); });
+        return row;
+      });
+    }
+
+    function rowToEntry(row, uid, displayName) {
+      const rawType = (row['activity type'] || row['type'] || '').toLowerCase().trim();
+      const type    = CSV_TYPE_MAP[rawType];
+      if (!type) return null;
+
+      const startDate = row['start'] ? new Date(row['start']) : null;
+      if (!startDate || isNaN(startDate)) return null;
+
+      const entry = {
+        type,
+        timestamp:  Timestamp.fromDate(startDate),
+        authorId:   uid,
+        authorName: displayName,
+        source:     'csv_import',
+      };
+
+      const endDate = row['end'] ? new Date(row['end']) : null;
+      if (endDate && !isNaN(endDate)) entry.endTime = Timestamp.fromDate(endDate);
+      if (row['duration']) entry.duration = row['duration'];
+      if (row['details'])  entry.details  = row['details'];
+      return entry;
+    }
+
+    function setupCSVImport(currentUser, memberIds) {
+      const input     = document.getElementById('csv-input');
+      const filenameEl = document.getElementById('csv-filename');
+      const previewRow = document.getElementById('csv-preview-row');
+      const countEl   = document.getElementById('csv-count');
+      const importBtn = document.getElementById('btn-csv-import');
+      const errEl     = document.getElementById('csv-error');
+      let pending     = [];
+
+      input.addEventListener('change', () => {
+        const file = input.files[0];
+        if (!file) return;
+        filenameEl.textContent = file.name;
+        errEl.style.display = 'none';
+        previewRow.style.display = 'none';
+        pending = [];
+
+        const reader = new FileReader();
+        reader.onload = e => {
+          const rows    = parseCSV(e.target.result);
+          const entries = rows.map(r => rowToEntry(r, currentUser.uid, currentUser.displayName || currentUser.email))
+                              .filter(Boolean);
+          if (!entries.length) {
+            errEl.textContent = 'No valid rows found. Check that column names match and dates are parseable.';
+            errEl.style.display = 'block';
+            return;
+          }
+          pending = entries;
+          countEl.textContent = `${entries.length} of ${rows.length} rows valid`;
+          importBtn.textContent = `Import ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`;
+          previewRow.style.display = 'flex';
+        };
+        reader.readAsText(file);
+      });
+
+      importBtn.addEventListener('click', async () => {
+        if (!pending.length) return;
+        importBtn.disabled = true;
+        importBtn.textContent = 'Importing…';
+        errEl.style.display = 'none';
+        try {
+          // Batch write in chunks of 499 (Firestore limit is 500 ops/batch)
+          for (let i = 0; i < pending.length; i += 499) {
+            const batch = writeBatch(db);
+            pending.slice(i, i + 499).forEach(entry => {
+              batch.set(doc(collection(db, 'babyLogs', currentUser.uid, 'entries')), entry);
+            });
+            await batch.commit();
+          }
+          showToast(`✅ Imported ${pending.length} entr${pending.length === 1 ? 'y' : 'ies'}`);
+          pending = [];
+          previewRow.style.display = 'none';
+          filenameEl.textContent = '';
+          input.value = '';
+          await loadActivity(currentUser, memberIds);
+        } catch (e) {
+          errEl.textContent = 'Import failed: ' + (e.message || e.code);
+          errEl.style.display = 'block';
+          importBtn.disabled = false;
+          importBtn.textContent = 'Retry';
+        }
+      });
+    }
+
     // ── Main ───────────────────────────────────────────────
     async function startApp(firebaseUser) {
       const uid     = firebaseUser.uid;
@@ -655,6 +817,7 @@
       // Render family + get member UIDs for activity
       const memberIds = await renderFamily(firebaseUser, userData);
       setupConnectForm(firebaseUser, userData);
+      setupCSVImport(firebaseUser, memberIds);
       await loadActivity(firebaseUser, memberIds);
 
       hideLoading();
