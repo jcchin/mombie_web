@@ -424,6 +424,49 @@
       </div>
     </div>
 
+    <!-- Milk intake chart -->
+    <div class="card-dark">
+      <h5><i class="fas fa-chart-bar me-1"></i> Milk Intake Over Time</h5>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:0.8rem">
+        <span class="msg-hint" style="margin:0">Breastfeed default:</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" id="bf-oz-input" min="0.5" max="20" step="0.5" value="2.5"
+            style="width:62px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);
+                   border-radius:8px;color:#fff;padding:4px 8px;font-size:0.9rem;text-align:center">
+          <span class="msg-hint" style="margin:0">oz / session</span>
+        </div>
+        <button id="btn-recalc"
+          style="background:rgba(253,204,82,0.15);border:1px solid rgba(253,204,82,0.35);
+                 color:var(--gold);border-radius:8px;padding:4px 12px;font-size:0.78rem;cursor:pointer">
+          Recalculate
+        </button>
+      </div>
+      <p class="msg-hint" style="margin-bottom:0.6rem">
+        Add <strong style="color:rgba(255,255,255,0.55)">4oz</strong> or <strong style="color:rgba(255,255,255,0.55)">120ml</strong> in Details to override per-session
+      </p>
+      <div id="milk-empty" style="display:none" class="msg-empty">No feed entries yet.</div>
+      <div id="milk-stats-row" class="milk-stats" style="display:none">
+        <div class="milk-stat">
+          <div class="milk-stat-label">Avg Daily</div>
+          <div class="milk-stat-value" id="milk-avg">—</div>
+          <div class="milk-stat-sub">oz / day</div>
+        </div>
+        <div class="milk-stat">
+          <div class="milk-stat-label">Peak Day</div>
+          <div class="milk-stat-value" id="milk-peak-val">—</div>
+          <div class="milk-stat-sub" id="milk-peak-date"></div>
+        </div>
+        <div class="milk-stat">
+          <div class="milk-stat-label">Min Day</div>
+          <div class="milk-stat-value" id="milk-min-val">—</div>
+          <div class="milk-stat-sub" id="milk-min-date"></div>
+        </div>
+      </div>
+      <div id="milk-chart-wrap" style="display:none">
+        <canvas id="milk-chart" height="220"></canvas>
+      </div>
+    </div>
+
     <!-- CSV import -->
     <div class="card-dark">
       <h5><i class="fas fa-file-import me-1"></i> Import from CSV</h5>
@@ -453,37 +496,6 @@
       </div>
     </div>
 
-  </div>
-
-  <!-- Milk intake chart -->
-  <div class="dashboard" style="padding-top:0">
-    <div class="card-dark">
-      <h5><i class="fas fa-chart-bar me-1"></i> Milk Intake Over Time</h5>
-      <p class="msg-hint" style="margin-bottom:0.8rem">
-        Breastfeed sessions counted as 2.5 oz · add <strong style="color:rgba(255,255,255,0.55)">4oz</strong> or <strong style="color:rgba(255,255,255,0.55)">120ml</strong> to Details to override
-      </p>
-      <div id="milk-empty" style="display:none" class="msg-empty">No feed entries yet.</div>
-      <div id="milk-stats-row" class="milk-stats" style="display:none">
-        <div class="milk-stat">
-          <div class="milk-stat-label">Avg Daily</div>
-          <div class="milk-stat-value" id="milk-avg">—</div>
-          <div class="milk-stat-sub">oz / day</div>
-        </div>
-        <div class="milk-stat">
-          <div class="milk-stat-label">Peak Day</div>
-          <div class="milk-stat-value" id="milk-peak-val">—</div>
-          <div class="milk-stat-sub" id="milk-peak-date"></div>
-        </div>
-        <div class="milk-stat">
-          <div class="milk-stat-label">Min Day</div>
-          <div class="milk-stat-value" id="milk-min-val">—</div>
-          <div class="milk-stat-sub" id="milk-min-date"></div>
-        </div>
-      </div>
-      <div id="milk-chart-wrap" style="display:none">
-        <canvas id="milk-chart" height="220"></canvas>
-      </div>
-    </div>
   </div>
 
   <div class="toast-msg" id="toast"></div>
@@ -854,16 +866,21 @@
     }
 
     // ── Milk chart ─────────────────────────────────────────
-    const BREASTFEED_OZ = 2.5;
+    const BF_OZ_KEY = 'mombie_bf_oz';
 
-    function parseOz(details) {
-      if (!details) return BREASTFEED_OZ;
+    function getBfOz() {
+      const stored = parseFloat(localStorage.getItem(BF_OZ_KEY));
+      return (stored > 0) ? stored : 2.5;
+    }
+
+    function parseOz(details, bfOz) {
+      if (!details) return bfOz;
       const s = details.toLowerCase();
       const ozM = s.match(/(\d+\.?\d*)\s*oz/);
       if (ozM) return parseFloat(ozM[1]);
       const mlM = s.match(/(\d+\.?\d*)\s*ml/);
       if (mlM) return parseFloat(mlM[1]) / 29.574;
-      return BREASTFEED_OZ;
+      return bfOz;
     }
 
     function fmtDate(iso) {
@@ -871,10 +888,19 @@
       return new Date(+y, +m - 1, +d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
+    let _milkChartInstance = null;
+
     async function renderMilkChart(currentUser, memberIds) {
+      const bfOz   = getBfOz();
       const emptyEl = document.getElementById('milk-empty');
       const statsEl = document.getElementById('milk-stats-row');
       const wrapEl  = document.getElementById('milk-chart-wrap');
+
+      // Reset state for re-renders
+      emptyEl.style.display = 'none';
+      statsEl.style.display = 'none';
+      wrapEl.style.display  = 'none';
+      if (_milkChartInstance) { _milkChartInstance.destroy(); _milkChartInstance = null; }
 
       // Collect all feed entries across family members
       const entries = [];
@@ -894,7 +920,7 @@
       entries.forEach(e => {
         if (!e.timestamp) return;
         const key = e.timestamp.toDate().toISOString().split('T')[0];
-        daily[key] = (daily[key] || 0) + parseOz(e.details);
+        daily[key] = (daily[key] || 0) + parseOz(e.details, bfOz);
       });
 
       const dates  = Object.keys(daily).sort();
@@ -920,7 +946,7 @@
       statsEl.style.display = 'grid';
       wrapEl.style.display  = 'block';
 
-      new Chart(document.getElementById('milk-chart'), {
+      _milkChartInstance = new Chart(document.getElementById('milk-chart'), {
         data: {
           labels: dates.map(fmtDate),
           datasets: [
@@ -1007,6 +1033,17 @@
       setupConnectForm(firebaseUser, userData);
       setupCSVImport(firebaseUser, memberIds);
       await loadActivity(firebaseUser, memberIds);
+
+      // Breastfeed oz setting
+      const bfInput = document.getElementById('bf-oz-input');
+      bfInput.value = getBfOz();
+      document.getElementById('btn-recalc').addEventListener('click', async () => {
+        const val = parseFloat(bfInput.value);
+        if (!val || val <= 0) return;
+        localStorage.setItem(BF_OZ_KEY, val);
+        await renderMilkChart(firebaseUser, memberIds);
+      });
+
       await renderMilkChart(firebaseUser, memberIds);
 
       hideLoading();
