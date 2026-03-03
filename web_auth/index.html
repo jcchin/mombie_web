@@ -292,6 +292,39 @@
     .msg-hint  { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-bottom: 0.8rem; }
     .family-full { font-size: 0.8rem; color: #34d399; }
 
+    /* ── Milk chart ── */
+    .milk-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+    .milk-stat {
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .milk-stat-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 4px;
+    }
+    .milk-stat-value {
+      font-family: 'Catamaran', sans-serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--gold);
+      line-height: 1.1;
+    }
+    .milk-stat-sub {
+      font-size: 0.62rem;
+      color: rgba(255,255,255,0.3);
+      margin-top: 3px;
+    }
+
     /* ── CSV import ── */
     .csv-pick-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .btn-csv-pick {
@@ -422,8 +455,40 @@
 
   </div>
 
+  <!-- Milk intake chart -->
+  <div class="dashboard" style="padding-top:0">
+    <div class="card-dark">
+      <h5><i class="fas fa-chart-bar me-1"></i> Milk Intake Over Time</h5>
+      <p class="msg-hint" style="margin-bottom:0.8rem">
+        Breastfeed sessions counted as 2.5 oz · add <strong style="color:rgba(255,255,255,0.55)">4oz</strong> or <strong style="color:rgba(255,255,255,0.55)">120ml</strong> to Details to override
+      </p>
+      <div id="milk-empty" style="display:none" class="msg-empty">No feed entries yet.</div>
+      <div id="milk-stats-row" class="milk-stats" style="display:none">
+        <div class="milk-stat">
+          <div class="milk-stat-label">Avg Daily</div>
+          <div class="milk-stat-value" id="milk-avg">—</div>
+          <div class="milk-stat-sub">oz / day</div>
+        </div>
+        <div class="milk-stat">
+          <div class="milk-stat-label">Peak Day</div>
+          <div class="milk-stat-value" id="milk-peak-val">—</div>
+          <div class="milk-stat-sub" id="milk-peak-date"></div>
+        </div>
+        <div class="milk-stat">
+          <div class="milk-stat-label">Min Day</div>
+          <div class="milk-stat-value" id="milk-min-val">—</div>
+          <div class="milk-stat-sub" id="milk-min-date"></div>
+        </div>
+      </div>
+      <div id="milk-chart-wrap" style="display:none">
+        <canvas id="milk-chart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-msg" id="toast"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
   <script type="module">
     import { initializeApp }                           from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
     import { getAuth, GoogleAuthProvider,
@@ -788,6 +853,128 @@
       });
     }
 
+    // ── Milk chart ─────────────────────────────────────────
+    const BREASTFEED_OZ = 2.5;
+
+    function parseOz(details) {
+      if (!details) return BREASTFEED_OZ;
+      const s = details.toLowerCase();
+      const ozM = s.match(/(\d+\.?\d*)\s*oz/);
+      if (ozM) return parseFloat(ozM[1]);
+      const mlM = s.match(/(\d+\.?\d*)\s*ml/);
+      if (mlM) return parseFloat(mlM[1]) / 29.574;
+      return BREASTFEED_OZ;
+    }
+
+    function fmtDate(iso) {
+      const [y, m, d] = iso.split('-');
+      return new Date(+y, +m - 1, +d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    async function renderMilkChart(currentUser, memberIds) {
+      const emptyEl = document.getElementById('milk-empty');
+      const statsEl = document.getElementById('milk-stats-row');
+      const wrapEl  = document.getElementById('milk-chart-wrap');
+
+      // Collect all feed entries across family members
+      const entries = [];
+      await Promise.all(memberIds.map(async uid => {
+        const q    = query(collection(db, 'babyLogs', uid, 'entries'), orderBy('timestamp', 'asc'), limit(2000));
+        const snap = await getDocs(q);
+        snap.forEach(d => {
+          const data = d.data();
+          if (data.type === 'feed' || data.type === 'feeding') entries.push(data);
+        });
+      }));
+
+      if (!entries.length) { emptyEl.style.display = 'block'; return; }
+
+      // Group by date → daily oz totals
+      const daily = {};
+      entries.forEach(e => {
+        if (!e.timestamp) return;
+        const key = e.timestamp.toDate().toISOString().split('T')[0];
+        daily[key] = (daily[key] || 0) + parseOz(e.details);
+      });
+
+      const dates  = Object.keys(daily).sort();
+      const totals = dates.map(d => +daily[d].toFixed(1));
+
+      // 7-day rolling average (trailing window)
+      const rolling = totals.map((_, i) => {
+        const slice = totals.slice(Math.max(0, i - 6), i + 1);
+        return +(slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(1);
+      });
+
+      // Stats
+      const avg    = +(totals.reduce((a, b) => a + b, 0) / totals.length).toFixed(1);
+      const maxVal = Math.max(...totals), maxIdx = totals.lastIndexOf(maxVal);
+      const minVal = Math.min(...totals), minIdx = totals.indexOf(minVal);
+
+      document.getElementById('milk-avg').textContent      = avg;
+      document.getElementById('milk-peak-val').textContent = maxVal.toFixed(1) + ' oz';
+      document.getElementById('milk-peak-date').textContent = fmtDate(dates[maxIdx]);
+      document.getElementById('milk-min-val').textContent  = minVal.toFixed(1) + ' oz';
+      document.getElementById('milk-min-date').textContent  = fmtDate(dates[minIdx]);
+
+      statsEl.style.display = 'grid';
+      wrapEl.style.display  = 'block';
+
+      new Chart(document.getElementById('milk-chart'), {
+        data: {
+          labels: dates.map(fmtDate),
+          datasets: [
+            {
+              type: 'bar',
+              label: 'Daily (oz)',
+              data: totals,
+              backgroundColor: 'rgba(253,204,82,0.3)',
+              borderColor:     'rgba(253,204,82,0.7)',
+              borderWidth: 1,
+              borderRadius: 3,
+              order: 2,
+            },
+            {
+              type: 'line',
+              label: '7-day avg',
+              data: rolling,
+              borderColor: '#a78bfa',
+              backgroundColor: 'rgba(167,139,250,0.08)',
+              borderWidth: 2.5,
+              pointRadius: 0,
+              tension: 0.4,
+              fill: true,
+              order: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { color: 'rgba(255,255,255,0.6)', font: { size: 12 }, boxWidth: 14 } },
+            tooltip: {
+              backgroundColor: 'rgba(15,8,40,0.92)',
+              titleColor: 'rgba(255,255,255,0.75)',
+              bodyColor:  'rgba(255,255,255,0.6)',
+              callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y.toFixed(1)} oz` },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: 'rgba(255,255,255,0.4)', maxTicksLimit: 12, maxRotation: 45 },
+              grid:  { color: 'rgba(255,255,255,0.05)' },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: 'rgba(255,255,255,0.4)', callback: v => v + ' oz' },
+              grid:  { color: 'rgba(255,255,255,0.05)' },
+            },
+          },
+        },
+      });
+    }
+
     // ── Main ───────────────────────────────────────────────
     async function startApp(firebaseUser) {
       const uid     = firebaseUser.uid;
@@ -820,6 +1007,7 @@
       setupConnectForm(firebaseUser, userData);
       setupCSVImport(firebaseUser, memberIds);
       await loadActivity(firebaseUser, memberIds);
+      await renderMilkChart(firebaseUser, memberIds);
 
       hideLoading();
 
