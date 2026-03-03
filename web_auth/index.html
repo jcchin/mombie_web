@@ -12,9 +12,9 @@
 
   <style>
     :root {
-      --mombie-indigo: #3b2f6e;
-      --mombie-purple: #7b4397;
-      --mombie-gold: #fdcc52;
+      --gold: #fdcc52;
+      --indigo: #3b2f6e;
+      --purple: #7b4397;
     }
 
     body {
@@ -37,36 +37,20 @@
       top: 0;
       z-index: 100;
     }
-    .topbar .brand {
+    .brand {
       display: flex;
       align-items: center;
       gap: 10px;
       font-family: 'Catamaran', sans-serif;
       font-weight: 900;
       font-size: 1.2rem;
-      color: var(--mombie-gold);
+      color: var(--gold);
       text-decoration: none;
     }
-    .topbar .brand img {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-    }
-    .topbar .user-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .topbar .user-info img {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 2px solid var(--mombie-gold);
-    }
-    .topbar .user-info span {
-      font-size: 0.9rem;
-      color: rgba(255,255,255,0.8);
-    }
+    .brand img { width: 32px; height: 32px; border-radius: 8px; }
+    .topbar-user { display: flex; align-items: center; gap: 10px; }
+    .topbar-user img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--gold); }
+    .topbar-user span { font-size: 0.9rem; color: rgba(255,255,255,0.8); }
     .btn-signout {
       background: transparent;
       border: 1px solid rgba(255,255,255,0.25);
@@ -79,7 +63,7 @@
     }
     .btn-signout:hover { border-color: rgba(255,255,255,0.6); color: #fff; }
 
-    /* ── Cards ── */
+    /* ── Dashboard layout ── */
     .dashboard { max-width: 720px; margin: 0 auto; padding: 28px 16px 60px; }
 
     .card-dark {
@@ -100,24 +84,56 @@
       margin-bottom: 1rem;
     }
 
-    /* ── Partner card ── */
-    .partner-status {
+    /* ── Family members row ── */
+    .member-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 1.2rem;
+      align-items: flex-start;
+    }
+    .member-bubble {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+    .member-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.25);
+      object-fit: cover;
+      background: rgba(255,255,255,0.1);
       display: flex;
       align-items: center;
-      gap: 10px;
-      color: rgba(255,255,255,0.7);
-      font-size: 0.9rem;
-      margin-bottom: 1rem;
-    }
-    .partner-status .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #6b7280;
+      justify-content: center;
+      font-family: 'Catamaran', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #fff;
+      overflow: hidden;
       flex-shrink: 0;
     }
-    .partner-status.paired .dot { background: #34d399; }
+    .member-avatar.me { border-color: var(--gold); }
+    .member-label {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      max-width: 52px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .member-count {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 1rem;
+    }
+    .member-count span { color: var(--gold); font-weight: 700; }
 
-    .invite-code-box {
+    /* ── Invite code ── */
+    .invite-box {
       background: rgba(0,0,0,0.3);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 12px;
@@ -126,28 +142,36 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      margin-bottom: 0.8rem;
     }
-    .invite-code-box .code {
+    .invite-box-label {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 2px;
+    }
+    .invite-code {
       font-family: 'Catamaran', sans-serif;
       font-weight: 900;
       font-size: 1.6rem;
       letter-spacing: 0.3em;
-      color: var(--mombie-gold);
+      color: var(--gold);
     }
     .btn-copy {
       background: rgba(253,204,82,0.15);
       border: 1px solid rgba(253,204,82,0.35);
-      color: var(--mombie-gold);
+      color: var(--gold);
       border-radius: 10px;
       padding: 6px 14px;
       font-size: 0.78rem;
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.2s;
+      flex-shrink: 0;
     }
     .btn-copy:hover { background: rgba(253,204,82,0.25); }
 
-    .connect-form { display: flex; gap: 8px; margin-top: 12px; }
+    /* ── Connect form ── */
+    .connect-form { display: flex; gap: 8px; }
     .connect-form input {
       flex: 1;
       background: rgba(0,0,0,0.3);
@@ -161,10 +185,15 @@
       font-family: 'Catamaran', sans-serif;
       font-weight: 700;
     }
-    .connect-form input::placeholder { color: rgba(255,255,255,0.3); letter-spacing: 0; font-weight: 400; text-transform: none; }
-    .connect-form input:focus { outline: none; border-color: var(--mombie-gold); }
+    .connect-form input::placeholder {
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0;
+      font-weight: 400;
+      text-transform: none;
+    }
+    .connect-form input:focus { outline: none; border-color: var(--gold); }
     .btn-connect {
-      background: var(--mombie-gold);
+      background: var(--gold);
       border: none;
       color: #1a1040;
       border-radius: 10px;
@@ -173,28 +202,10 @@
       font-weight: 700;
       cursor: pointer;
       transition: opacity 0.2s;
+      flex-shrink: 0;
     }
     .btn-connect:hover { opacity: 0.85; }
     .btn-connect:disabled { opacity: 0.4; cursor: default; }
-
-    .paired-partner {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .paired-partner img {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      border: 2px solid #34d399;
-    }
-    .paired-partner .partner-name {
-      font-weight: 700;
-      font-size: 1rem;
-    }
-    .paired-partner .partner-email {
-      font-size: 0.78rem;
-      color: rgba(255,255,255,0.5);
-    }
 
     /* ── Log buttons ── */
     .log-buttons {
@@ -216,15 +227,15 @@
       align-items: center;
       gap: 6px;
     }
-    .btn-log:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); }
+    .btn-log:hover  { background: rgba(255,255,255,0.15); }
     .btn-log:active { transform: scale(0.96); }
     .btn-log .log-icon { font-size: 1.6rem; }
-    .btn-log.feeding  { border-color: rgba(253,204,82,0.35); }
-    .btn-log.diaper   { border-color: rgba(147,197,253,0.35); }
-    .btn-log.sleep    { border-color: rgba(167,139,250,0.35); }
-    .btn-log.feeding:hover  { background: rgba(253,204,82,0.12); }
-    .btn-log.diaper:hover   { background: rgba(147,197,253,0.12); }
-    .btn-log.sleep:hover    { background: rgba(167,139,250,0.12); }
+    .btn-log.feeding { border-color: rgba(253,204,82,0.35); }
+    .btn-log.diaper  { border-color: rgba(147,197,253,0.35); }
+    .btn-log.sleep   { border-color: rgba(167,139,250,0.35); }
+    .btn-log.feeding:hover { background: rgba(253,204,82,0.12); }
+    .btn-log.diaper:hover  { background: rgba(147,197,253,0.12); }
+    .btn-log.sleep:hover   { background: rgba(167,139,250,0.12); }
 
     /* ── Activity feed ── */
     .activity-entry {
@@ -236,10 +247,10 @@
     }
     .activity-entry:last-child { border-bottom: none; }
     .activity-icon { font-size: 1.3rem; width: 32px; text-align: center; flex-shrink: 0; }
-    .activity-meta { flex: 1; }
-    .activity-type { font-size: 0.88rem; font-weight: 700; }
+    .activity-meta { flex: 1; min-width: 0; }
+    .activity-type   { font-size: 0.88rem; font-weight: 700; }
     .activity-author { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
-    .activity-time { font-size: 0.72rem; color: rgba(255,255,255,0.35); white-space: nowrap; }
+    .activity-time   { font-size: 0.72rem; color: rgba(255,255,255,0.35); white-space: nowrap; }
 
     /* ── Toast ── */
     .toast-msg {
@@ -257,23 +268,29 @@
       opacity: 0;
       transition: opacity 0.3s;
       pointer-events: none;
+      white-space: nowrap;
     }
     .toast-msg.show { opacity: 1; }
 
     /* ── Loading overlay ── */
     #loading-overlay {
-      position: fixed; inset: 0;
+      position: fixed;
+      inset: 0;
       background: #1a1040;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       z-index: 999;
       transition: opacity 0.4s;
     }
     #loading-overlay.fade { opacity: 0; pointer-events: none; }
-    .spinner { color: var(--mombie-gold); font-size: 2rem; animation: spin 1s linear infinite; }
+    .spinner { color: var(--gold); font-size: 2rem; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .msg-empty { color: rgba(255,255,255,0.3); font-size: 0.85rem; text-align: center; padding: 16px 0; }
-    .msg-error { color: #f87171; font-size: 0.82rem; margin-top: 6px; }
+    .msg-error { color: #f87171; font-size: 0.82rem; margin-top: 8px; }
+    .msg-hint  { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-bottom: 0.8rem; }
+    .family-full { font-size: 0.8rem; color: #34d399; }
   </style>
 </head>
 
@@ -283,57 +300,63 @@
     <i class="fas fa-moon spinner"></i>
   </div>
 
-  <!-- Topbar -->
   <div class="topbar">
     <a class="brand" href="../">
       <img src="https://raw.githubusercontent.com/jcchin/mombie_flutter/master/assets/images/icon.png" alt="Mombie">
       Mombie
     </a>
-    <div class="user-info">
+    <div class="topbar-user">
       <img id="topbar-avatar" src="" alt="" style="display:none">
       <span id="topbar-name"></span>
       <button class="btn-signout" id="btn-signout">Sign out</button>
     </div>
   </div>
 
-  <!-- Dashboard -->
   <div class="dashboard">
 
-    <!-- Partner card -->
+    <!-- Family card -->
     <div class="card-dark">
-      <h5><i class="fas fa-heart me-1"></i> Partner</h5>
-      <div id="partner-section">
-        <div class="partner-status" id="partner-status-line">
-          <div class="dot"></div>
-          <span>Not paired yet</span>
+      <h5><i class="fas fa-people-group me-1"></i> Family</h5>
+
+      <!-- Members row (shown when in a family) -->
+      <div id="family-members-section" style="display:none">
+        <div class="member-row" id="member-row"></div>
+        <div class="member-count" id="member-count"></div>
+        <div id="family-invite-hint" class="msg-hint"></div>
+        <div id="family-full-msg" class="family-full" style="display:none">
+          <i class="fas fa-check-circle me-1"></i>Family is full (6/6 members).
         </div>
-        <p style="font-size:0.82rem;color:rgba(255,255,255,0.45);margin-bottom:1rem;">
-          Share your invite code with your partner, or enter theirs below.
-        </p>
-        <div class="invite-code-box">
-          <div class="code" id="invite-code">––––––</div>
+        <div id="family-invite-box" class="invite-box">
+          <div>
+            <div class="invite-box-label">Share your code to invite more members</div>
+            <div class="invite-code" id="invite-code-display">––––––</div>
+          </div>
           <button class="btn-copy" id="btn-copy-code">
             <i class="fas fa-copy me-1"></i>Copy
           </button>
         </div>
-        <div class="connect-form" id="connect-form">
-          <input type="text" id="partner-code-input" placeholder="Enter partner's code" maxlength="6">
-          <button class="btn-connect" id="btn-connect">Connect</button>
+      </div>
+
+      <!-- No family yet -->
+      <div id="no-family-section">
+        <p class="msg-hint" style="margin-bottom:1rem;">
+          Start a family by sharing your invite code, or enter a family member's code to join theirs.
+          Up to 6 people can link to a single child.
+        </p>
+        <div class="invite-box" style="margin-bottom:1rem;">
+          <div>
+            <div class="invite-box-label">Your invite code</div>
+            <div class="invite-code" id="invite-code-solo">––––––</div>
+          </div>
+          <button class="btn-copy" id="btn-copy-solo">
+            <i class="fas fa-copy me-1"></i>Copy
+          </button>
+        </div>
+        <div class="connect-form">
+          <input type="text" id="partner-code-input" placeholder="Enter a family member's code" maxlength="6">
+          <button class="btn-connect" id="btn-connect">Join</button>
         </div>
         <div class="msg-error" id="connect-error" style="display:none"></div>
-      </div>
-      <div id="partner-paired" style="display:none">
-        <div class="partner-status paired">
-          <div class="dot"></div>
-          <span>Paired</span>
-        </div>
-        <div class="paired-partner">
-          <img id="partner-avatar" src="" alt="">
-          <div>
-            <div class="partner-name" id="partner-name"></div>
-            <div class="partner-email" id="partner-email"></div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -342,16 +365,13 @@
       <h5><i class="fas fa-baby me-1"></i> Log Baby Event</h5>
       <div class="log-buttons">
         <button class="btn-log feeding" data-type="feeding">
-          <span class="log-icon">🍼</span>
-          Feeding
+          <span class="log-icon">🍼</span>Feeding
         </button>
         <button class="btn-log diaper" data-type="diaper">
-          <span class="log-icon">👶</span>
-          Diaper
+          <span class="log-icon">👶</span>Diaper
         </button>
         <button class="btn-log sleep" data-type="sleep">
-          <span class="log-icon">💤</span>
-          Sleep
+          <span class="log-icon">💤</span>Sleep
         </button>
       </div>
     </div>
@@ -369,17 +389,17 @@
   <div class="toast-msg" id="toast"></div>
 
   <script type="module">
-    import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
+    import { initializeApp }                           from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
     import { getAuth, GoogleAuthProvider,
-             signInWithCredential, signOut,
-             onAuthStateChanged }                     from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js';
+             signInWithCredential, signOut }            from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js';
     import { getFirestore, doc, getDoc, setDoc,
              updateDoc, addDoc, collection,
              query, orderBy, limit, getDocs,
-             serverTimestamp, where }                 from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
+             serverTimestamp, arrayUnion }              from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
 
-    // ── Firebase init ──────────────────────────────────────
-    const app = initializeApp({
+    const FAMILY_MAX = 6;
+
+    const app  = initializeApp({
       apiKey:            "AIzaSyCV9y8nj5TERbIpOX8IH0Cc3BBen36agHI",
       authDomain:        "mombie-a56e8.firebaseapp.com",
       projectId:         "mombie-a56e8",
@@ -395,11 +415,16 @@
       return Math.random().toString(36).substring(2, 8).toUpperCase();
     }
 
+    function initials(name) {
+      if (!name) return '?';
+      return name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    }
+
     function timeAgo(ts) {
       if (!ts) return '';
       const diff = Math.floor((Date.now() - ts.toMillis()) / 1000);
-      if (diff < 60)   return `${diff}s ago`;
-      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff <    60) return `${diff}s ago`;
+      if (diff <  3600) return `${Math.floor(diff / 60)}m ago`;
       if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
       return `${Math.floor(diff / 86400)}d ago`;
     }
@@ -410,36 +435,51 @@
       sleep:   { icon: '💤', label: 'Sleep'   }
     };
 
-    function showToast(msg, duration = 2500) {
+    function showToast(msg, ms = 2500) {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), duration);
+      setTimeout(() => t.classList.remove('show'), ms);
     }
 
     function hideLoading() {
-      const overlay = document.getElementById('loading-overlay');
-      overlay.classList.add('fade');
-      setTimeout(() => overlay.remove(), 400);
+      const el = document.getElementById('loading-overlay');
+      el.classList.add('fade');
+      setTimeout(() => el.remove(), 400);
     }
 
-    // ── Render activity feed ───────────────────────────────
-    async function loadActivity(currentUser, coupleId) {
-      const feed = document.getElementById('activity-feed');
-      const uids = [currentUser.uid];
+    function avatarEl(userData, isMe) {
+      const wrap = document.createElement('div');
+      wrap.className = 'member-bubble';
 
-      let partnerUid = null;
-      if (coupleId) {
-        const coupleSnap = await getDoc(doc(db, 'couples', coupleId));
-        if (coupleSnap.exists()) {
-          partnerUid = coupleSnap.data().memberIds.find(id => id !== currentUser.uid);
-          if (partnerUid) uids.push(partnerUid);
-        }
+      const bubble = document.createElement('div');
+      bubble.className = 'member-avatar' + (isMe ? ' me' : '');
+
+      if (userData.photo) {
+        const img = document.createElement('img');
+        img.src = userData.photo;
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+        img.onerror = () => { bubble.textContent = initials(userData.name); };
+        bubble.appendChild(img);
+      } else {
+        bubble.textContent = initials(userData.name);
       }
 
-      // Fetch logs from all relevant users
+      const label = document.createElement('div');
+      label.className = 'member-label';
+      label.textContent = isMe ? 'You' : (userData.name || 'Member').split(' ')[0];
+
+      wrap.appendChild(bubble);
+      wrap.appendChild(label);
+      return wrap;
+    }
+
+    // ── Load activity feed ─────────────────────────────────
+    async function loadActivity(currentUser, memberIds) {
+      const feed = document.getElementById('activity-feed');
       const allEntries = [];
-      for (const uid of uids) {
+
+      await Promise.all(memberIds.map(async uid => {
         const q = query(
           collection(db, 'babyLogs', uid, 'entries'),
           orderBy('timestamp', 'desc'),
@@ -447,12 +487,13 @@
         );
         const snap = await getDocs(q);
         snap.forEach(d => allEntries.push({ id: d.id, uid, ...d.data() }));
-      }
+      }));
 
-      // Sort merged results by timestamp descending, keep top 15
-      allEntries.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+      allEntries.sort((a, b) =>
+        (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0)
+      );
+
       const entries = allEntries.slice(0, 15);
-
       if (!entries.length) {
         feed.innerHTML = '<div class="msg-empty">No events logged yet.</div>';
         return;
@@ -466,127 +507,158 @@
             <div class="activity-icon">${meta.icon}</div>
             <div class="activity-meta">
               <div class="activity-type">${meta.label}</div>
-              <div class="activity-author">${isMe ? 'You' : (e.authorName || 'Partner')}</div>
+              <div class="activity-author">${isMe ? 'You' : (e.authorName || 'Family member')}</div>
             </div>
             <div class="activity-time">${timeAgo(e.timestamp)}</div>
           </div>`;
       }).join('');
     }
 
-    // ── Render partner section ─────────────────────────────
-    async function loadPartner(currentUserDoc, coupleId) {
-      if (!coupleId) return;
+    // ── Render family section ──────────────────────────────
+    async function renderFamily(currentUser, userData) {
+      const familyId = userData.familyId;
 
-      const coupleSnap = await getDoc(doc(db, 'couples', coupleId));
-      if (!coupleSnap.exists()) return;
+      if (!familyId) {
+        // Not in a family — show invite code + join form
+        document.getElementById('invite-code-solo').textContent = userData.inviteCode;
+        document.getElementById('btn-copy-solo').addEventListener('click', () => {
+          navigator.clipboard.writeText(userData.inviteCode).then(() => showToast('Code copied!'));
+        });
+        return [currentUser.uid]; // only self for activity
+      }
 
-      const partnerUid = coupleSnap.data().memberIds.find(id => id !== currentUserDoc.uid);
-      if (!partnerUid) return;
+      // In a family — show all members
+      document.getElementById('no-family-section').style.display = 'none';
+      document.getElementById('family-members-section').style.display = 'block';
 
-      const partnerSnap = await getDoc(doc(db, 'users', partnerUid));
-      if (!partnerSnap.exists()) return;
+      const familySnap = await getDoc(doc(db, 'families', familyId));
+      if (!familySnap.exists()) return [currentUser.uid];
 
-      const p = partnerSnap.data();
-      document.getElementById('partner-section').style.display = 'none';
-      const paired = document.getElementById('partner-paired');
-      paired.style.display = 'block';
-      document.getElementById('partner-name').textContent  = p.name;
-      document.getElementById('partner-email').textContent = p.email;
-      const avatar = document.getElementById('partner-avatar');
-      if (p.photo) { avatar.src = p.photo; } else { avatar.style.display = 'none'; }
+      const memberIds = familySnap.data().memberIds;
+      const count     = memberIds.length;
+
+      // Load all member profiles
+      const memberDocs = await Promise.all(
+        memberIds.map(uid => getDoc(doc(db, 'users', uid)))
+      );
+
+      const row = document.getElementById('member-row');
+      memberDocs.forEach(snap => {
+        if (!snap.exists()) return;
+        row.appendChild(avatarEl(snap.data(), snap.id === currentUser.uid));
+      });
+
+      document.getElementById('member-count').innerHTML =
+        `<span>${count}</span> / ${FAMILY_MAX} family members`;
+
+      if (count >= FAMILY_MAX) {
+        document.getElementById('family-full-msg').style.display = 'block';
+        document.getElementById('family-invite-box').style.display = 'none';
+      } else {
+        document.getElementById('invite-code-display').textContent = userData.inviteCode;
+        document.getElementById('btn-copy-code').addEventListener('click', () => {
+          navigator.clipboard.writeText(userData.inviteCode).then(() => showToast('Code copied!'));
+        });
+      }
+
+      return memberIds;
     }
 
-    // ── Main app ───────────────────────────────────────────
+    // ── Connect / join family ──────────────────────────────
+    function setupConnectForm(currentUser, userData) {
+      if (userData.familyId) return; // already in a family
+
+      const btn = document.getElementById('btn-connect');
+      const err = document.getElementById('connect-error');
+
+      btn.addEventListener('click', async () => {
+        const code = document.getElementById('partner-code-input').value.trim().toUpperCase();
+        err.style.display = 'none';
+
+        if (!code || code.length !== 6) {
+          err.textContent = 'Enter a valid 6-character code.'; err.style.display = 'block'; return;
+        }
+        if (code === userData.inviteCode) {
+          err.textContent = "That's your own code!"; err.style.display = 'block'; return;
+        }
+
+        btn.disabled = true;
+        try {
+          const codeSnap = await getDoc(doc(db, 'inviteCodes', code));
+          if (!codeSnap.exists()) throw new Error('Code not found. Double-check with your family member.');
+
+          const targetUid  = codeSnap.data().uid;
+          const targetSnap = await getDoc(doc(db, 'users', targetUid));
+          if (!targetSnap.exists()) throw new Error('User not found.');
+
+          const targetData = targetSnap.data();
+          let familyId     = targetData.familyId;
+
+          if (familyId) {
+            // Join existing family
+            const familySnap = await getDoc(doc(db, 'families', familyId));
+            if (!familySnap.exists()) throw new Error('Family not found.');
+            const members = familySnap.data().memberIds;
+            if (members.includes(currentUser.uid)) throw new Error('You are already in this family.');
+            if (members.length >= FAMILY_MAX)       throw new Error(`Family is full (${FAMILY_MAX}/${FAMILY_MAX} members).`);
+
+            await updateDoc(doc(db, 'families', familyId), { memberIds: arrayUnion(currentUser.uid) });
+          } else {
+            // Create new family
+            familyId = [currentUser.uid, targetUid].sort().join('_');
+            await setDoc(doc(db, 'families', familyId), {
+              memberIds: [currentUser.uid, targetUid],
+              createdAt: serverTimestamp()
+            });
+            await updateDoc(doc(db, 'users', targetUid), { familyId });
+          }
+
+          await updateDoc(doc(db, 'users', currentUser.uid), { familyId });
+          showToast('Family linked! 🎉', 3000);
+          setTimeout(() => location.reload(), 1500);
+        } catch (e) {
+          err.textContent = e.message || 'Could not connect. Try again.';
+          err.style.display = 'block';
+          btn.disabled = false;
+        }
+      });
+    }
+
+    // ── Main ───────────────────────────────────────────────
     async function startApp(firebaseUser) {
-      const uid = firebaseUser.uid;
-
-      // Load or create user profile
+      const uid     = firebaseUser.uid;
       const userRef = doc(db, 'users', uid);
-      let userSnap  = await getDoc(userRef);
+      let   snap    = await getDoc(userRef);
 
-      if (!userSnap.exists()) {
+      if (!snap.exists()) {
         const inviteCode = randomCode();
         await setDoc(userRef, {
           name:      firebaseUser.displayName,
           email:     firebaseUser.email,
           photo:     firebaseUser.photoURL,
           createdAt: serverTimestamp(),
-          coupleId:  null,
+          familyId:  null,
           inviteCode
         });
-        // Register invite code
         await setDoc(doc(db, 'inviteCodes', inviteCode), { uid });
-        userSnap = await getDoc(userRef);
+        snap = await getDoc(userRef);
       }
 
-      const userData = userSnap.data();
+      const userData = snap.data();
 
       // Topbar
-      const topAvatar = document.getElementById('topbar-avatar');
-      if (firebaseUser.photoURL) {
-        topAvatar.src = firebaseUser.photoURL;
-        topAvatar.style.display = 'inline-block';
-      }
+      const avatar = document.getElementById('topbar-avatar');
+      if (firebaseUser.photoURL) { avatar.src = firebaseUser.photoURL; avatar.style.display = 'inline-block'; }
       document.getElementById('topbar-name').textContent = firebaseUser.displayName || firebaseUser.email;
 
-      // Invite code display
-      document.getElementById('invite-code').textContent = userData.inviteCode || '––––––';
-
-      // Copy code
-      document.getElementById('btn-copy-code').addEventListener('click', () => {
-        navigator.clipboard.writeText(userData.inviteCode || '').then(() => showToast('Code copied!'));
-      });
-
-      // Load partner + activity
-      await Promise.all([
-        loadPartner(userData, userData.coupleId),
-        loadActivity(firebaseUser, userData.coupleId)
-      ]);
+      // Render family + get member UIDs for activity
+      const memberIds = await renderFamily(firebaseUser, userData);
+      setupConnectForm(firebaseUser, userData);
+      await loadActivity(firebaseUser, memberIds);
 
       hideLoading();
 
-      // Connect partner
-      const connectBtn = document.getElementById('btn-connect');
-      const connectErr = document.getElementById('connect-error');
-      connectBtn.addEventListener('click', async () => {
-        const code = document.getElementById('partner-code-input').value.trim().toUpperCase();
-        if (!code || code.length !== 6) {
-          connectErr.textContent = 'Enter a valid 6-character code.';
-          connectErr.style.display = 'block';
-          return;
-        }
-        if (code === userData.inviteCode) {
-          connectErr.textContent = "That's your own code!";
-          connectErr.style.display = 'block';
-          return;
-        }
-        connectBtn.disabled = true;
-        connectErr.style.display = 'none';
-        try {
-          const codeSnap = await getDoc(doc(db, 'inviteCodes', code));
-          if (!codeSnap.exists()) throw new Error('Code not found.');
-          const partnerUid = codeSnap.data().uid;
-          if (partnerUid === uid) throw new Error("That's your own code!");
-
-          const coupleId = [uid, partnerUid].sort().join('_');
-          await setDoc(doc(db, 'couples', coupleId), {
-            memberIds: [uid, partnerUid],
-            createdAt: serverTimestamp()
-          });
-          await Promise.all([
-            updateDoc(doc(db, 'users', uid), { coupleId }),
-            updateDoc(doc(db, 'users', partnerUid), { coupleId })
-          ]);
-          showToast('Partner connected! 🎉', 3000);
-          setTimeout(() => location.reload(), 1500);
-        } catch (e) {
-          connectErr.textContent = e.message || 'Could not connect. Try again.';
-          connectErr.style.display = 'block';
-          connectBtn.disabled = false;
-        }
-      });
-
-      // Log baby events
+      // Baby log buttons
       document.querySelectorAll('.btn-log').forEach(btn => {
         btn.addEventListener('click', async () => {
           const type = btn.dataset.type;
@@ -599,9 +671,9 @@
               authorName: firebaseUser.displayName || firebaseUser.email
             });
             showToast(`${LOG_META[type].icon} ${LOG_META[type].label} logged!`);
-            await loadActivity(firebaseUser, userData.coupleId);
+            await loadActivity(firebaseUser, memberIds);
           } catch (e) {
-            showToast('Could not save. Check Firestore rules.');
+            showToast('Could not save — check Firestore rules.');
           } finally {
             btn.style.opacity = '1';
           }
@@ -617,15 +689,13 @@
     }
 
     // ── Entry point ────────────────────────────────────────
-    const rawCredential = sessionStorage.getItem('mombie_credential');
-    if (!rawCredential) {
+    const raw = sessionStorage.getItem('mombie_credential');
+    if (!raw) {
       window.location.href = '../';
     } else {
-      const googleCredential = GoogleAuthProvider.credential(rawCredential);
-      signInWithCredential(auth, googleCredential)
-        .then(result => startApp(result.user))
+      signInWithCredential(auth, GoogleAuthProvider.credential(raw))
+        .then(r => startApp(r.user))
         .catch(() => {
-          // Credential expired — re-auth via splash
           sessionStorage.removeItem('mombie_credential');
           window.location.href = '../';
         });
