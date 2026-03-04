@@ -143,6 +143,16 @@
     }
     .btn-buzz:hover { background: rgba(255,255,255,0.2); }
     .btn-buzz:disabled { opacity: 0.4; cursor: default; }
+    .buzz-toggle {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      user-select: none;
+    }
+    .buzz-toggle input[type="checkbox"] { accent-color: var(--gold); cursor: pointer; }
 
     /* ── Invite code ── */
     .invite-box {
@@ -677,22 +687,48 @@
       memberDocs.forEach(snap => {
         if (!snap.exists()) return;
         const isMe = snap.id === currentUser.uid;
-        row.appendChild(avatarEl(snap.data(), isMe));
-        const targetUid = snap.id;
-        const name = isMe ? 'me' : (snap.data().displayName || 'them');
-        const btn = document.createElement('button');
-        btn.className = 'btn-buzz';
-        btn.title = isMe ? 'Buzz my phone' : `Buzz ${name}'s phone`;
-        btn.innerHTML = `<i class="fas fa-bell"></i> ${isMe ? 'Buzz me' : 'Buzz'}`;
-        btn.onclick = async () => {
-          await setDoc(doc(db, 'vibrations', targetUid), {
-            from: currentUser.uid,
-            at: serverTimestamp()
-          });
-          btn.disabled = true;
-          setTimeout(() => btn.disabled = false, 3000);
-        };
-        row.lastChild.appendChild(btn);
+        const data = snap.data();
+        row.appendChild(avatarEl(data, isMe));
+
+        if (isMe) {
+          // Toggle to opt into being buzzed by others
+          const lbl = document.createElement('label');
+          lbl.className = 'buzz-toggle';
+          lbl.title = 'Let others buzz your phone';
+          const chk = document.createElement('input');
+          chk.type = 'checkbox';
+          chk.checked = !!data.buzzEnabled;
+          chk.onchange = () => updateDoc(doc(db, 'users', currentUser.uid), { buzzEnabled: chk.checked });
+          lbl.appendChild(chk);
+          lbl.append(' 🔔 Buzzable');
+          row.lastChild.appendChild(lbl);
+
+          // Always allow self-buzz
+          const btn = document.createElement('button');
+          btn.className = 'btn-buzz';
+          btn.title = 'Buzz my phone';
+          btn.innerHTML = '<i class="fas fa-bell"></i> Buzz me';
+          btn.onclick = async () => {
+            await setDoc(doc(db, 'vibrations', currentUser.uid), { from: currentUser.uid, at: serverTimestamp() });
+            btn.disabled = true;
+            setTimeout(() => btn.disabled = false, 3000);
+          };
+          row.lastChild.appendChild(btn);
+        } else if (data.buzzEnabled) {
+          // Only show if member opted in
+          const targetUid = snap.id;
+          const name = data.displayName || 'them';
+          const btn = document.createElement('button');
+          btn.className = 'btn-buzz';
+          btn.title = `Buzz ${name}'s phone`;
+          btn.innerHTML = '<i class="fas fa-bell"></i> Buzz';
+          btn.onclick = async () => {
+            await setDoc(doc(db, 'vibrations', targetUid), { from: currentUser.uid, at: serverTimestamp() });
+            btn.disabled = true;
+            setTimeout(() => btn.disabled = false, 3000);
+          };
+          row.lastChild.appendChild(btn);
+        }
       });
 
       document.getElementById('member-count').innerHTML =
