@@ -678,24 +678,21 @@
         if (!snap.exists()) return;
         const isMe = snap.id === currentUser.uid;
         row.appendChild(avatarEl(snap.data(), isMe));
-        if (!isMe) {
-          const targetUid = snap.id;
-          const name = snap.data().displayName || 'them';
-          const btn = document.createElement('button');
-          btn.className = 'btn-buzz';
-          btn.title = `Buzz ${name}'s phone`;
-          btn.innerHTML = '<i class="fas fa-bell"></i> Buzz';
-          btn.onclick = async () => {
-            await setDoc(doc(db, 'vibrations', targetUid), {
-              from: currentUser.uid,
-              at: serverTimestamp()
-            });
-            btn.disabled = true;
-            setTimeout(() => btn.disabled = false, 3000);
-          };
-          // Append buzz button inside the member-bubble created by avatarEl
-          row.lastChild.appendChild(btn);
-        }
+        const targetUid = snap.id;
+        const name = isMe ? 'me' : (snap.data().displayName || 'them');
+        const btn = document.createElement('button');
+        btn.className = 'btn-buzz';
+        btn.title = isMe ? 'Buzz my phone' : `Buzz ${name}'s phone`;
+        btn.innerHTML = `<i class="fas fa-bell"></i> ${isMe ? 'Buzz me' : 'Buzz'}`;
+        btn.onclick = async () => {
+          await setDoc(doc(db, 'vibrations', targetUid), {
+            from: currentUser.uid,
+            at: serverTimestamp()
+          });
+          btn.disabled = true;
+          setTimeout(() => btn.disabled = false, 3000);
+        };
+        row.lastChild.appendChild(btn);
       });
 
       document.getElementById('member-count').innerHTML =
