@@ -131,6 +131,18 @@
       margin-bottom: 1rem;
     }
     .member-count span { color: var(--gold); font-weight: 700; }
+    .btn-buzz {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      color: var(--gold);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-buzz:hover { background: rgba(255,255,255,0.2); }
+    .btn-buzz:disabled { opacity: 0.4; cursor: default; }
 
     /* ── Invite code ── */
     .invite-box {
@@ -664,7 +676,26 @@
       const row = document.getElementById('member-row');
       memberDocs.forEach(snap => {
         if (!snap.exists()) return;
-        row.appendChild(avatarEl(snap.data(), snap.id === currentUser.uid));
+        const isMe = snap.id === currentUser.uid;
+        row.appendChild(avatarEl(snap.data(), isMe));
+        if (!isMe) {
+          const targetUid = snap.id;
+          const name = snap.data().displayName || 'them';
+          const btn = document.createElement('button');
+          btn.className = 'btn-buzz';
+          btn.title = `Buzz ${name}'s phone`;
+          btn.innerHTML = '<i class="fas fa-bell"></i> Buzz';
+          btn.onclick = async () => {
+            await setDoc(doc(db, 'vibrations', targetUid), {
+              from: currentUser.uid,
+              at: serverTimestamp()
+            });
+            btn.disabled = true;
+            setTimeout(() => btn.disabled = false, 3000);
+          };
+          // Append buzz button inside the member-bubble created by avatarEl
+          row.lastChild.appendChild(btn);
+        }
       });
 
       document.getElementById('member-count').innerHTML =
