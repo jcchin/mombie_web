@@ -143,16 +143,21 @@
     }
     .btn-buzz:hover { background: rgba(255,255,255,0.2); }
     .btn-buzz:disabled { opacity: 0.4; cursor: default; }
-    .buzz-toggle {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.65rem;
+    .btn-buzz-toggle {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
       color: rgba(255,255,255,0.5);
+      font-size: 0.78rem;
+      padding: 4px 14px;
       cursor: pointer;
-      user-select: none;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
-    .buzz-toggle input[type="checkbox"] { accent-color: var(--gold); cursor: pointer; }
+    .btn-buzz-toggle.active {
+      background: rgba(253,204,82,0.18);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
 
     /* ── Invite code ── */
     .invite-box {
@@ -691,17 +696,17 @@
         row.appendChild(avatarEl(data, isMe));
 
         if (isMe) {
-          // Toggle to opt into being buzzed by others
-          const lbl = document.createElement('label');
-          lbl.className = 'buzz-toggle';
-          lbl.title = 'Let others buzz your phone';
-          const chk = document.createElement('input');
-          chk.type = 'checkbox';
-          chk.checked = !!data.buzzEnabled;
-          chk.onchange = () => updateDoc(doc(db, 'users', currentUser.uid), { buzzEnabled: chk.checked });
-          lbl.appendChild(chk);
-          lbl.append(' 🔔 Buzzable');
-          row.lastChild.appendChild(lbl);
+          // Toggle button to opt into being buzzed by others
+          let buzzOn = !!data.buzzEnabled;
+          const toggleBtn = document.createElement('button');
+          toggleBtn.className = 'btn-buzz-toggle' + (buzzOn ? ' active' : '');
+          toggleBtn.textContent = '🔔 Allow family to buzz me';
+          toggleBtn.onclick = async () => {
+            buzzOn = !buzzOn;
+            await updateDoc(doc(db, 'users', currentUser.uid), { buzzEnabled: buzzOn });
+            toggleBtn.classList.toggle('active', buzzOn);
+          };
+          row.lastChild.appendChild(toggleBtn);
 
           // Always allow self-buzz
           const btn = document.createElement('button');
