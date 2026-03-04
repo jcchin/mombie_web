@@ -537,7 +537,7 @@
              updateDoc, addDoc, collection,
              query, where, orderBy, limit, getDocs,
              serverTimestamp, arrayUnion,
-             writeBatch, Timestamp }                    from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
+             writeBatch, Timestamp, onSnapshot }         from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
 
     const FAMILY_MAX = 9;
 
@@ -699,6 +699,7 @@
           // Toggle button to opt into being buzzed by others
           let buzzOn = !!data.buzzEnabled;
           const toggleBtn = document.createElement('button');
+          toggleBtn.id = 'btn-buzz-toggle';
           toggleBtn.className = 'btn-buzz-toggle' + (buzzOn ? ' active' : '');
           toggleBtn.textContent = '🔔 Allow family to buzz me';
           toggleBtn.onclick = async () => {
@@ -1121,6 +1122,12 @@
 
       // Render family + get member UIDs for activity
       const memberIds = await renderFamily(firebaseUser, userData);
+
+      // Keep buzz toggle in sync across devices
+      onSnapshot(doc(db, 'users', uid), snap => {
+        const btn = document.getElementById('btn-buzz-toggle');
+        if (btn) btn.classList.toggle('active', !!snap.data()?.buzzEnabled);
+      });
       setupConnectForm(firebaseUser, userData);
       setupCSVImport(firebaseUser, memberIds);
       await loadActivity(firebaseUser, memberIds);
