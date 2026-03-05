@@ -135,7 +135,8 @@
 
 <script type="module">
   import { initializeApp }             from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
-  import { getAuth, GoogleAuthProvider, signInWithPopup,
+  import { getAuth, GoogleAuthProvider,
+           signInWithRedirect, getRedirectResult,
            signInWithEmailAndPassword, onAuthStateChanged }
                                        from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js';
   import { getFirestore, doc, getDoc, getDocs,
@@ -163,6 +164,13 @@
     el.textContent = msg; el.style.display = 'block';
   }
 
+  // Handle return from Google redirect
+  getRedirectResult(auth).catch(err => {
+    const el = document.getElementById('auth-error');
+    el.textContent = err.message.replace('Firebase: ','').replace(/ \(auth\/.*\)\.?$/,'');
+    el.style.display = 'block';
+  });
+
   onAuthStateChanged(auth, user => {
     if (user) {
       document.getElementById('confirm-email').textContent = user.email || user.displayName || 'your account';
@@ -188,12 +196,7 @@
   // Google sign-in
   document.getElementById('btn-google-signin').addEventListener('click', async () => {
     document.getElementById('auth-error').style.display = 'none';
-    try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
-    } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user')
-        showAuthError(err.message.replace('Firebase: ','').replace(/ \(auth\/.*\)\.?$/,''));
-    }
+    await signInWithRedirect(auth, new GoogleAuthProvider());
   });
 
   // Delete account
