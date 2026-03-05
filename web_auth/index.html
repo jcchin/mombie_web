@@ -563,7 +563,7 @@
   </div>
 
   <div class="topbar">
-    <a class="brand" href="../">
+    <a class="brand" href="." id="brand-link">
       <img src="https://raw.githubusercontent.com/jcchin/mombie_flutter/master/assets/images/icon.png" alt="Mombie">
       Mombie
     </a>
@@ -1882,6 +1882,15 @@
             btn.style.opacity = '1';
           }
         });
+      });
+
+      // Brand logo — return to main view
+      document.getElementById('brand-link').addEventListener('click', e => {
+        e.preventDefault();
+        document.getElementById('main-view').style.display     = 'block';
+        document.getElementById('settings-view').style.display = 'none';
+        document.getElementById('btn-settings').classList.remove('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
       // Settings toggle
