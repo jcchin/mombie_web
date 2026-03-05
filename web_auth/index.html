@@ -455,11 +455,12 @@
     /* Alert config panel */
     .btn-alert-toggle {
       background: none; border: none;
-      color: rgba(255,255,255,0.35); font-size: 0.72rem;
+      color: rgba(255,255,255,0.55); font-size: 0.78rem;
       cursor: pointer; margin-top: 14px;
-      padding: 0; display: flex; align-items: center; gap: 5px;
+      padding: 0; display: flex; align-items: center; gap: 6px;
+      font-weight: 600; letter-spacing: 0.02em;
     }
-    .btn-alert-toggle:hover { color: rgba(255,255,255,0.65); }
+    .btn-alert-toggle:hover { color: rgba(255,255,255,0.85); }
     .alert-settings {
       display: none; margin-top: 14px;
       border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px;
@@ -1559,12 +1560,12 @@
     // ── Alert settings ─────────────────────────────────────
     const ALERT_KEY = 'mombie_alerts';
     const ALERT_DEFAULTS = {
-      feeding:    { enabled: false, thresholdH: 3,  freqMins: 30 },
-      diaper:     { enabled: false, thresholdH: 2,  freqMins: 30 },
-      sleep:      { enabled: false, thresholdH: 4,  freqMins: 60 },
-      meds:       { enabled: false, thresholdH: 6,  freqMins: 60 },
-      tummy_time: { enabled: false, thresholdH: 4,  freqMins: 60 },
-      bath:       { enabled: false, thresholdH: 24, freqMins: 60 },
+      feeding:    { enabled: false, thresholdH: 3,  thresholdM: 0, freqMins: 30 },
+      diaper:     { enabled: false, thresholdH: 2,  thresholdM: 0, freqMins: 30 },
+      sleep:      { enabled: false, thresholdH: 4,  thresholdM: 0, freqMins: 60 },
+      meds:       { enabled: false, thresholdH: 6,  thresholdM: 0, freqMins: 60 },
+      tummy_time: { enabled: false, thresholdH: 4,  thresholdM: 0, freqMins: 60 },
+      bath:       { enabled: false, thresholdH: 24, thresholdM: 0, freqMins: 60 },
     };
 
     let _lastBuzzedAt = {}; // key → ms of last buzz sent
@@ -1579,7 +1580,7 @@
     function isAlerting(key) {
       const cfg = loadAlertSettings()[key];
       if (!cfg?.enabled || !_lastActMs[key]) return false;
-      return (Date.now() - _lastActMs[key]) / 60000 >= cfg.thresholdH * 60;
+      return (Date.now() - _lastActMs[key]) / 60000 >= cfg.thresholdH * 60 + (cfg.thresholdM || 0);
     }
 
     async function checkAlerts() {
@@ -1590,7 +1591,7 @@
         const cfg = settings[key];
         if (!cfg?.enabled || !_lastActMs[key]) continue;
         const elapsedMins = (now - _lastActMs[key]) / 60000;
-        if (elapsedMins < cfg.thresholdH * 60) continue;
+        if (elapsedMins < cfg.thresholdH * 60 + (cfg.thresholdM || 0)) continue;
         const sinceLastBuzz = (now - (_lastBuzzedAt[key] || 0)) / 60000;
         if (!_lastBuzzedAt[key] || sinceLastBuzz >= cfg.freqMins) {
           _lastBuzzedAt[key] = now;
@@ -1616,9 +1617,12 @@
             <span class="alert-slider"></span>
           </label>
           <span class="alert-hint">after</span>
-          <input type="number" class="alert-input alert-threshold" value="${cfg.thresholdH}"
-            min="0.5" max="48" step="0.5" ${cfg.enabled ? '' : 'disabled'}>
-          <span class="alert-hint">h, repeat every</span>
+          <input type="number" class="alert-input alert-threshold-h" value="${cfg.thresholdH}"
+            min="0" max="48" step="1" ${cfg.enabled ? '' : 'disabled'}>
+          <span class="alert-hint">h</span>
+          <input type="number" class="alert-input alert-threshold-m" value="${cfg.thresholdM || 0}"
+            min="0" max="59" step="5" ${cfg.enabled ? '' : 'disabled'}>
+          <span class="alert-hint">m, repeat every</span>
           <input type="number" class="alert-input alert-freq" value="${cfg.freqMins}"
             min="5" max="240" step="5" ${cfg.enabled ? '' : 'disabled'}>
           <span class="alert-hint">min</span>
@@ -1627,22 +1631,25 @@
 
       container.querySelectorAll('.alert-row').forEach(row => {
         const key       = row.dataset.key;
-        const toggle    = row.querySelector('.alert-enabled');
-        const threshold = row.querySelector('.alert-threshold');
-        const freq      = row.querySelector('.alert-freq');
+        const toggle     = row.querySelector('.alert-enabled');
+        const thresholdH = row.querySelector('.alert-threshold-h');
+        const thresholdM = row.querySelector('.alert-threshold-m');
+        const freq       = row.querySelector('.alert-freq');
         const persist = () => {
           const s = loadAlertSettings();
-          s[key] = { enabled: toggle.checked, thresholdH: parseFloat(threshold.value) || 3, freqMins: parseInt(freq.value) || 30 };
+          s[key] = { enabled: toggle.checked, thresholdH: parseInt(thresholdH.value) || 0, thresholdM: parseInt(thresholdM.value) || 0, freqMins: parseInt(freq.value) || 30 };
           saveAlertSettings(s);
           if (!toggle.checked) { _lastBuzzedAt[key] = 0; }
-          renderLastActivityTiles(); // refresh alerting state
+          renderLastActivityTiles();
         };
         toggle.addEventListener('change', () => {
-          threshold.disabled = !toggle.checked;
-          freq.disabled      = !toggle.checked;
+          thresholdH.disabled = !toggle.checked;
+          thresholdM.disabled = !toggle.checked;
+          freq.disabled       = !toggle.checked;
           persist();
         });
-        threshold.addEventListener('change', persist);
+        thresholdH.addEventListener('change', persist);
+        thresholdM.addEventListener('change', persist);
         freq.addEventListener('change', persist);
       });
 
