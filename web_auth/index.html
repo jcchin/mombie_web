@@ -1158,7 +1158,7 @@
       return bfOz;
     }
 
-    function fmtDate(iso) {
+    function fmtIsoDate(iso) {
       const [y, m, d] = iso.split('-');
       return new Date(+y, +m - 1, +d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
@@ -1214,16 +1214,16 @@
 
       document.getElementById('milk-avg').textContent      = avg;
       document.getElementById('milk-peak-val').textContent = maxVal.toFixed(1) + ' oz';
-      document.getElementById('milk-peak-date').textContent = fmtDate(dates[maxIdx]);
+      document.getElementById('milk-peak-date').textContent = fmtIsoDate(dates[maxIdx]);
       document.getElementById('milk-min-val').textContent  = minVal.toFixed(1) + ' oz';
-      document.getElementById('milk-min-date').textContent  = fmtDate(dates[minIdx]);
+      document.getElementById('milk-min-date').textContent  = fmtIsoDate(dates[minIdx]);
 
       statsEl.style.display = 'grid';
       wrapEl.style.display  = 'block';
 
       _milkChartInstance = new Chart(document.getElementById('milk-chart'), {
         data: {
-          labels: dates.map(fmtDate),
+          labels: dates.map(fmtIsoDate),
           datasets: [
             {
               type: 'bar',
