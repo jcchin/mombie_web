@@ -525,7 +525,7 @@
   <script type="module">
     import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
     import { getAuth, GoogleAuthProvider,
-             signInWithRedirect, getRedirectResult,
+             signInWithPopup,
              signInWithEmailAndPassword,
              createUserWithEmailAndPassword }          from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js';
 
@@ -545,17 +545,17 @@
       window.location.href = base + 'web_auth/';
     }
 
-    // Handle return from Google redirect sign-in
-    getRedirectResult(auth).then(result => {
-      if (result?.user) redirect();
-    }).catch(err => {
-      const errEl = document.getElementById('signin-error');
-      errEl.textContent = 'Sign-in failed: ' + (err.code || err.message);
-      errEl.style.display = 'block';
-    });
-
     async function signIn() {
-      await signInWithRedirect(auth, provider);
+      const errEl = document.getElementById('signin-error');
+      errEl.style.display = 'none';
+      try {
+        await signInWithPopup(auth, provider);
+        redirect();
+      } catch (err) {
+        if (err.code === 'auth/popup-closed-by-user') return;
+        errEl.textContent = 'Sign-in failed: ' + (err.code || err.message);
+        errEl.style.display = 'block';
+      }
     }
 
     async function emailAuth(mode) {
