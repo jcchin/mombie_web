@@ -424,6 +424,27 @@
     .msg-hint  { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-bottom: 0.8rem; }
     .family-full { font-size: 0.8rem; color: #34d399; }
 
+    /* ── Last activity timers ── */
+    .last-act-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .last-act-tile {
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 14px 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .last-act-icon  { font-size: 1.5rem; }
+    .last-act-label { font-size: 0.62rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; }
+    .last-act-time  { font-family: 'Catamaran', sans-serif; font-weight: 900; font-size: 1.05rem; color: var(--gold); }
+    .last-act-time.stale { color: #f87171; }
+
     /* ── Milk chart ── */
     .milk-stats {
       display: grid;
@@ -539,6 +560,12 @@
         </div>
         <div class="msg-error" id="connect-error" style="display:none"></div>
       </div>
+    </div>
+
+    <!-- Last activity timers -->
+    <div class="card-dark" id="last-activity-card" style="display:none">
+      <h5><i class="fas fa-stopwatch me-1"></i> Time Since Last</h5>
+      <div class="last-act-grid" id="last-activity-grid"></div>
     </div>
 
     <!-- Log a baby event -->
@@ -714,6 +741,17 @@
       bath:       { icon: '🛁', label: 'Bath'       },
       sleep:      { icon: '💤', label: 'Sleep'      },
     };
+
+    function fmtElapsed(ms) {
+      const diff = Math.floor((Date.now() - ms) / 1000);
+      if (diff < 60) return 'just now';
+      const m = Math.floor(diff / 60);
+      if (m < 60) return `${m}m`;
+      const h = Math.floor(m / 60), rm = m % 60;
+      if (h < 24) return rm > 0 ? `${h}h ${rm}m` : `${h}h`;
+      const d = Math.floor(h / 24), rh = h % 24;
+      return rh > 0 ? `${d}d ${rh}h` : `${d}d`;
+    }
 
     function showToast(msg, ms = 2500) {
       const t = document.getElementById('toast');
@@ -1466,6 +1504,68 @@
       });
     }
 
+    // ── Last activity timers ───────────────────────────────
+    const LAST_ACT_TYPES = [
+      { key: 'feeding', label: 'Feeding',   icon: '🍼' },
+      { key: 'diaper',  label: 'Diaper',    icon: '👶' },
+      { key: 'sleep',   label: 'Sleep',     icon: '💤' },
+      { key: 'meds',    label: 'Meds',      icon: '💊' },
+      { key: 'tummy_time', label: 'Tummy',  icon: '⏱'  },
+      { key: 'bath',    label: 'Bath',      icon: '🛁' },
+    ];
+
+    let _lastActMs = {}; // key → timestamp ms
+    let _lastActTimer = null;
+
+    async function loadLastActivity(memberIds) {
+      _lastActMs = {};
+      await Promise.all(memberIds.map(async uid => {
+        const q = query(
+          collection(db, 'babyLogs', uid, 'entries'),
+          orderBy('timestamp', 'desc'),
+          limit(200)
+        );
+        const snap = await getDocs(q);
+        snap.forEach(d => {
+          const data = d.data();
+          if (!data.timestamp) return;
+          // normalise feed/feeding → feeding
+          const type = data.type === 'feed' ? 'feeding' : data.type;
+          const ms   = data.timestamp.toMillis();
+          if (!_lastActMs[type] || ms > _lastActMs[type]) _lastActMs[type] = ms;
+        });
+      }));
+      renderLastActivityTiles();
+      document.getElementById('last-activity-card').style.display = 'block';
+
+      if (_lastActTimer) clearInterval(_lastActTimer);
+      _lastActTimer = setInterval(refreshLastActivityTimes, 30_000);
+    }
+
+    function renderLastActivityTiles() {
+      const grid = document.getElementById('last-activity-grid');
+      if (!grid) return;
+      grid.innerHTML = LAST_ACT_TYPES.map(({ key, label, icon }) => {
+        const ms    = _lastActMs[key];
+        const text  = ms ? fmtElapsed(ms) : '—';
+        const stale = ms && (Date.now() - ms) > 4 * 3600_000; // red if > 4 h
+        return `<div class="last-act-tile">
+          <div class="last-act-icon">${icon}</div>
+          <div class="last-act-label">${label}</div>
+          <div class="last-act-time${stale ? ' stale' : ''}" data-ms="${ms || ''}">${text}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function refreshLastActivityTimes() {
+      document.querySelectorAll('#last-activity-grid .last-act-time').forEach(el => {
+        const ms = parseInt(el.dataset.ms);
+        if (!ms) return;
+        el.textContent = fmtElapsed(ms);
+        el.classList.toggle('stale', (Date.now() - ms) > 4 * 3600_000);
+      });
+    }
+
     // ── Main ───────────────────────────────────────────────
     async function startApp(firebaseUser) {
       const uid     = firebaseUser.uid;
@@ -1518,7 +1618,10 @@
       setupConnectForm(firebaseUser, userData);
       setupCSVImport(firebaseUser, memberIds);
       setupCalendarControls();
-      await loadActivity(firebaseUser, memberIds);
+      await Promise.all([
+        loadActivity(firebaseUser, memberIds),
+        loadLastActivity(memberIds),
+      ]);
 
       // Breastfeed oz setting
       const bfInput = document.getElementById('bf-oz-input');
@@ -1547,7 +1650,10 @@
               authorName: firebaseUser.displayName || firebaseUser.email
             });
             showToast(`${LOG_META[type].icon} ${LOG_META[type].label} logged!`);
-            await loadActivity(firebaseUser, memberIds);
+            await Promise.all([
+              loadActivity(firebaseUser, memberIds),
+              loadLastActivity(memberIds),
+            ]);
           } catch (e) {
             showToast('Could not save — check Firestore rules.');
           } finally {
