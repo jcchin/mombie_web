@@ -264,13 +264,41 @@
     .btn-log.diaper:hover  { background: rgba(147,197,253,0.12); }
     .btn-log.sleep:hover   { background: rgba(167,139,250,0.12); }
 
-    /* ── Activity feed ── */
+    /* ── Activity / Calendar ── */
+    .cal-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+    }
+    .cal-toolbar h5 { margin-bottom: 0; }
+    .cal-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .view-toggle {
+      display: flex; border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 10px; overflow: hidden;
+    }
+    .btn-view {
+      background: transparent; border: none;
+      color: rgba(255,255,255,0.45); padding: 4px 13px;
+      font-size: 0.76rem; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-view.active { background: rgba(255,255,255,0.14); color: #fff; }
+    .cal-nav { display: flex; align-items: center; gap: 5px; }
+    .btn-cal-nav {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
+      color: #fff; border-radius: 8px; width: 26px; height: 26px;
+      cursor: pointer; font-size: 1rem; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-cal-nav:hover { background: rgba(255,255,255,0.15); }
+    #cal-label { font-size: 0.82rem; min-width: 110px; text-align: center; color: rgba(255,255,255,0.85); }
+    .btn-cal-today {
+      background: rgba(253,204,82,0.12); border: 1px solid rgba(253,204,82,0.3);
+      color: var(--gold); border-radius: 8px; padding: 3px 9px;
+      font-size: 0.72rem; cursor: pointer;
+    }
+    /* List view */
     .activity-entry {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.07);
     }
     .activity-entry:last-child { border-bottom: none; }
     .activity-icon { font-size: 1.3rem; width: 32px; text-align: center; flex-shrink: 0; }
@@ -278,6 +306,30 @@
     .activity-type   { font-size: 0.88rem; font-weight: 700; }
     .activity-author { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
     .activity-time   { font-size: 0.72rem; color: rgba(255,255,255,0.35); white-space: nowrap; }
+    /* Day view */
+    .day-entry {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .day-entry:last-child { border-bottom: none; }
+    .day-time { font-size: 0.7rem; color: rgba(255,255,255,0.38); min-width: 54px; text-align: right; flex-shrink: 0; }
+    .day-icon { font-size: 1.2rem; width: 28px; text-align: center; flex-shrink: 0; }
+    .day-type   { font-size: 0.86rem; font-weight: 700; }
+    .day-author { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+    /* Week view */
+    .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .week-col { display: flex; flex-direction: column; align-items: center; }
+    .week-day-abbr { font-size: 0.6rem; color: rgba(255,255,255,0.35); margin-bottom: 4px; text-transform: uppercase; }
+    .week-day-num {
+      font-size: 0.85rem; font-weight: 700;
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 5px;
+    }
+    .week-day-num.today { background: var(--gold); color: #1a1040; }
+    .week-chips { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .week-chip { font-size: 1rem; line-height: 1.3; }
+    .week-overflow { font-size: 0.6rem; color: rgba(255,255,255,0.35); }
 
     /* ── Toast ── */
     .toast-msg {
@@ -518,9 +570,24 @@
       <div class="msg-error" id="csv-error" style="display:none"></div>
     </div>
 
-    <!-- Recent activity -->
+    <!-- Activity calendar -->
     <div class="card-dark">
-      <h5><i class="fas fa-list me-1"></i> Recent Activity</h5>
+      <div class="cal-toolbar">
+        <h5 style="margin-bottom:0"><i class="fas fa-calendar me-1"></i> Activity</h5>
+        <div class="cal-right">
+          <div class="view-toggle">
+            <button class="btn-view active" data-view="day">Day</button>
+            <button class="btn-view" data-view="week">Week</button>
+            <button class="btn-view" data-view="list">List</button>
+          </div>
+          <div class="cal-nav">
+            <button class="btn-cal-nav" id="btn-cal-prev">‹</button>
+            <span id="cal-label"></span>
+            <button class="btn-cal-nav" id="btn-cal-next">›</button>
+            <button class="btn-cal-today" id="btn-cal-today">Today</button>
+          </div>
+        </div>
+      </div>
       <div id="activity-feed">
         <div class="msg-empty">No events logged yet.</div>
       </div>
@@ -623,11 +690,88 @@
       return wrap;
     }
 
-    // ── Load activity feed ─────────────────────────────────
-    async function loadActivity(currentUser, memberIds) {
-      const feed = document.getElementById('activity-feed');
-      const allEntries = [];
+    // ── Calendar state ─────────────────────────────────────
+    let calView = 'day';
+    let calDate = new Date();
+    let calUser = null;
+    let calMembers = [];
 
+    function dayStart(d) { const s = new Date(d); s.setHours(0,0,0,0); return s; }
+    function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+    function weekStart(d) {
+      const s = dayStart(d);
+      const dow = s.getDay(); // 0=Sun
+      s.setDate(s.getDate() - (dow === 0 ? 6 : dow - 1)); // Monday
+      return s;
+    }
+    function fmtTime(ts) {
+      return ts.toDate().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+    function fmtDate(d, opts) { return d.toLocaleDateString('en-US', opts); }
+
+    async function fetchEntries(memberIds, start, end) {
+      const startTs = Timestamp.fromDate(start);
+      const endTs   = Timestamp.fromDate(end);
+      const all = [];
+      await Promise.all(memberIds.map(async uid => {
+        const q = query(
+          collection(db, 'babyLogs', uid, 'entries'),
+          where('timestamp', '>=', startTs),
+          where('timestamp', '<', endTs),
+          orderBy('timestamp', 'asc')
+        );
+        const snap = await getDocs(q);
+        snap.forEach(d => all.push({ id: d.id, uid, ...d.data() }));
+      }));
+      all.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+      return all;
+    }
+
+    function renderDayView(entries, currentUser) {
+      if (!entries.length) return '<div class="msg-empty">No events on this day.</div>';
+      return entries.map(e => {
+        const meta   = LOG_META[e.type] || { icon: '❓', label: e.type };
+        const author = e.uid === currentUser.uid ? 'You' : (e.authorName || 'Family member');
+        return `<div class="day-entry">
+          <div class="day-time">${e.timestamp ? fmtTime(e.timestamp) : ''}</div>
+          <div class="day-icon">${meta.icon}</div>
+          <div class="day-meta">
+            <div class="day-type">${meta.label}</div>
+            <div class="day-author">${author}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderWeekView(entries, weekStartDate) {
+      const today = dayStart(new Date()).getTime();
+      return `<div class="week-grid">${
+        Array.from({length: 7}, (_, i) => {
+          const d      = addDays(weekStartDate, i);
+          const dMs    = d.getTime();
+          const dEndMs = addDays(d, 1).getTime();
+          const isToday = dMs === today;
+          const dayEntries = entries.filter(e => {
+            const ms = e.timestamp?.toMillis() || 0;
+            return ms >= dMs && ms < dEndMs;
+          });
+          const abbr = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i];
+          const chips = dayEntries.slice(0, 6).map(e =>
+            `<span class="week-chip" title="${(LOG_META[e.type]||{label:e.type}).label}">${(LOG_META[e.type]||{icon:'❓'}).icon}</span>`
+          ).join('');
+          const overflow = dayEntries.length > 6
+            ? `<span class="week-overflow">+${dayEntries.length - 6}</span>` : '';
+          return `<div class="week-col">
+            <div class="week-day-abbr">${abbr}</div>
+            <div class="week-day-num${isToday ? ' today' : ''}">${d.getDate()}</div>
+            <div class="week-chips">${chips}${overflow}</div>
+          </div>`;
+        }).join('')
+      }</div>`;
+    }
+
+    async function renderListView(currentUser, memberIds) {
+      const all = [];
       await Promise.all(memberIds.map(async uid => {
         const q = query(
           collection(db, 'babyLogs', uid, 'entries'),
@@ -635,32 +779,82 @@
           limit(20)
         );
         const snap = await getDocs(q);
-        snap.forEach(d => allEntries.push({ id: d.id, uid, ...d.data() }));
+        snap.forEach(d => all.push({ id: d.id, uid, ...d.data() }));
       }));
+      all.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+      const entries = all.slice(0, 15);
+      if (!entries.length) return '<div class="msg-empty">No events logged yet.</div>';
+      return entries.map(e => {
+        const meta = LOG_META[e.type] || { icon: '❓', label: e.type };
+        const isMe = e.uid === currentUser.uid;
+        return `<div class="activity-entry">
+          <div class="activity-icon">${meta.icon}</div>
+          <div class="activity-meta">
+            <div class="activity-type">${meta.label}</div>
+            <div class="activity-author">${isMe ? 'You' : (e.authorName || 'Family member')}</div>
+          </div>
+          <div class="activity-time">${timeAgo(e.timestamp)}</div>
+        </div>`;
+      }).join('');
+    }
 
-      allEntries.sort((a, b) =>
-        (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0)
-      );
+    async function loadActivity(currentUser, memberIds) {
+      calUser    = currentUser;
+      calMembers = memberIds;
+      await refreshCalendar();
+    }
 
-      const entries = allEntries.slice(0, 15);
-      if (!entries.length) {
-        feed.innerHTML = '<div class="msg-empty">No events logged yet.</div>';
+    async function refreshCalendar() {
+      const feed  = document.getElementById('activity-feed');
+      const label = document.getElementById('cal-label');
+      if (!label) return;
+
+      if (calView === 'list') {
+        label.textContent = 'Recent';
+        feed.innerHTML = await renderListView(calUser, calMembers);
         return;
       }
 
-      feed.innerHTML = entries.map(e => {
-        const meta = LOG_META[e.type] || { icon: '❓', label: e.type };
-        const isMe = e.uid === currentUser.uid;
-        return `
-          <div class="activity-entry">
-            <div class="activity-icon">${meta.icon}</div>
-            <div class="activity-meta">
-              <div class="activity-type">${meta.label}</div>
-              <div class="activity-author">${isMe ? 'You' : (e.authorName || 'Family member')}</div>
-            </div>
-            <div class="activity-time">${timeAgo(e.timestamp)}</div>
-          </div>`;
-      }).join('');
+      let start, end;
+      if (calView === 'day') {
+        start = dayStart(calDate);
+        end   = addDays(start, 1);
+        label.textContent = fmtDate(start, { weekday: 'short', month: 'short', day: 'numeric' });
+      } else {
+        start = weekStart(calDate);
+        end   = addDays(start, 7);
+        label.textContent = `${fmtDate(start, { month: 'short', day: 'numeric' })} – ${fmtDate(addDays(end, -1), { month: 'short', day: 'numeric' })}`;
+      }
+
+      feed.innerHTML = '<div class="msg-empty" style="padding:8px 0">Loading…</div>';
+      const entries = await fetchEntries(calMembers, start, end);
+      feed.innerHTML = calView === 'day'
+        ? renderDayView(entries, calUser)
+        : renderWeekView(entries, start);
+    }
+
+    function setupCalendarControls() {
+      document.querySelectorAll('.btn-view').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.btn-view').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          calView = btn.dataset.view;
+          calDate = new Date();
+          refreshCalendar();
+        });
+      });
+      document.getElementById('btn-cal-prev').addEventListener('click', () => {
+        calDate = calView === 'week' ? addDays(calDate, -7) : addDays(calDate, -1);
+        refreshCalendar();
+      });
+      document.getElementById('btn-cal-next').addEventListener('click', () => {
+        calDate = calView === 'week' ? addDays(calDate, 7) : addDays(calDate, 1);
+        refreshCalendar();
+      });
+      document.getElementById('btn-cal-today').addEventListener('click', () => {
+        calDate = new Date();
+        refreshCalendar();
+      });
     }
 
     // ── Render family section ──────────────────────────────
@@ -1133,6 +1327,7 @@
       });
       setupConnectForm(firebaseUser, userData);
       setupCSVImport(firebaseUser, memberIds);
+      setupCalendarControls();
       await loadActivity(firebaseUser, memberIds);
 
       // Breastfeed oz setting
