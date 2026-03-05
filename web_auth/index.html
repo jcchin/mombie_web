@@ -306,16 +306,30 @@
     .activity-type   { font-size: 0.88rem; font-weight: 700; }
     .activity-author { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
     .activity-time   { font-size: 0.72rem; color: rgba(255,255,255,0.35); white-space: nowrap; }
-    /* Day view */
-    .day-entry {
-      display: flex; align-items: center; gap: 10px;
-      padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+    /* Day timeline view */
+    .day-grid-wrap {
+      max-height: 420px; overflow-y: auto; overflow-x: hidden;
+      border-radius: 8px;
     }
-    .day-entry:last-child { border-bottom: none; }
-    .day-time { font-size: 0.7rem; color: rgba(255,255,255,0.38); min-width: 54px; text-align: right; flex-shrink: 0; }
-    .day-icon { font-size: 1.2rem; width: 28px; text-align: center; flex-shrink: 0; }
-    .day-type   { font-size: 0.86rem; font-weight: 700; }
-    .day-author { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+    .day-grid { position: relative; margin-left: 46px; }
+    .hour-row {
+      position: absolute; left: -46px; right: 0;
+      height: 60px; display: flex; align-items: flex-start; pointer-events: none;
+    }
+    .hour-label {
+      width: 42px; font-size: 0.6rem; color: rgba(255,255,255,0.28);
+      text-align: right; padding-right: 6px; padding-top: 2px; flex-shrink: 0;
+    }
+    .hour-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); margin-top: 9px; }
+    .day-events-col { position: absolute; top: 0; left: 2px; right: 2px; bottom: 0; }
+    .day-event-block {
+      position: absolute; left: 0; right: 0;
+      border-radius: 6px; padding: 3px 8px;
+      overflow: hidden; cursor: default;
+      border-left-width: 3px; border-left-style: solid;
+    }
+    .day-event-label { font-weight: 700; font-size: 0.74rem; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .day-event-meta  { font-size: 0.63rem; color: rgba(255,255,255,0.5); white-space: nowrap; }
     /* Week view */
     .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
     .week-col { display: flex; flex-direction: column; align-items: center; }
@@ -727,20 +741,95 @@
       return all;
     }
 
-    function renderDayView(entries, currentUser) {
-      if (!entries.length) return '<div class="msg-empty">No events on this day.</div>';
-      return entries.map(e => {
-        const meta   = LOG_META[e.type] || { icon: '❓', label: e.type };
-        const author = e.uid === currentUser.uid ? 'You' : (e.authorName || 'Family member');
-        return `<div class="day-entry">
-          <div class="day-time">${e.timestamp ? fmtTime(e.timestamp) : ''}</div>
-          <div class="day-icon">${meta.icon}</div>
-          <div class="day-meta">
-            <div class="day-type">${meta.label}</div>
-            <div class="day-author">${author}</div>
-          </div>
+    const HOUR_H = 60; // px per hour
+
+    const EVENT_COLORS = {
+      feeding:    { bg: 'rgba(253,204,82,0.18)',  border: '#fdcc52', text: '#fdcc52' },
+      feed:       { bg: 'rgba(253,204,82,0.18)',  border: '#fdcc52', text: '#fdcc52' },
+      diaper:     { bg: 'rgba(147,197,253,0.18)', border: '#93c5fd', text: '#93c5fd' },
+      sleep:      { bg: 'rgba(167,139,250,0.18)', border: '#a78bfa', text: '#a78bfa' },
+      meds:       { bg: 'rgba(110,231,183,0.18)', border: '#6ee7b7', text: '#6ee7b7' },
+      tummy_time: { bg: 'rgba(251,146,60,0.18)',  border: '#fb923c', text: '#fb923c' },
+      bath:       { bg: 'rgba(103,232,249,0.18)', border: '#67e8f9', text: '#67e8f9' },
+    };
+
+    function parseDurationMins(e) {
+      if (e.endTime) return (e.endTime.toMillis() - e.timestamp.toMillis()) / 60000;
+      if (e.duration) {
+        const s = String(e.duration);
+        if (s.includes(':')) { const [h, m] = s.split(':').map(Number); return h * 60 + (m || 0); }
+        const n = parseFloat(s);
+        if (!isNaN(n) && n > 0) return n;
+      }
+      return 30;
+    }
+
+    // Assign non-overlapping columns so simultaneous events sit side-by-side
+    function assignColumns(events) {
+      const cols = []; // cols[i] = endMs of last event in column i
+      return events.map(e => {
+        if (!e.timestamp) return { ...e, col: 0, numCols: 1 };
+        const startMs = e.timestamp.toMillis();
+        const endMs   = startMs + parseDurationMins(e) * 60000;
+        let col = 0;
+        while (cols[col] !== undefined && cols[col] > startMs) col++;
+        cols[col] = endMs;
+        return { ...e, col, endMs };
+      });
+    }
+
+    function renderDayView(feedEl, entries, currentUser) {
+      const TOTAL_H = 24 * HOUR_H;
+
+      // Hour rows
+      const hourRows = Array.from({ length: 24 }, (_, h) => {
+        const label = h === 0 ? '12 am' : h < 12 ? `${h} am` : h === 12 ? '12 pm' : `${h - 12} pm`;
+        return `<div class="hour-row" style="top:${h * HOUR_H}px">
+          <div class="hour-label">${label}</div>
+          <div class="hour-line"></div>
         </div>`;
       }).join('');
+
+      // Event blocks with column layout
+      const laid = assignColumns(entries.filter(e => e.timestamp));
+      const numCols = laid.length ? Math.max(...laid.map(e => e.col)) + 1 : 1;
+
+      const eventBlocks = laid.map(e => {
+        const startDate = e.timestamp.toDate();
+        const startMins = startDate.getHours() * 60 + startDate.getMinutes();
+        const durMins   = parseDurationMins(e);
+        const top       = (startMins / 60) * HOUR_H;
+        const height    = Math.max((durMins / 60) * HOUR_H, 22);
+        const meta      = LOG_META[e.type] || { icon: '❓', label: e.type };
+        const color     = EVENT_COLORS[e.type] || { bg: 'rgba(255,255,255,0.1)', border: 'rgba(255,255,255,0.3)', text: '#fff' };
+        const author    = e.uid === currentUser.uid ? 'You' : (e.authorName || 'Family');
+        const colW      = 100 / numCols;
+        const style     = `top:${top}px;height:${height}px;background:${color.bg};border-color:${color.border};`
+                        + `left:${e.col * colW}%;width:${colW}%;color:${color.text};`;
+        return `<div class="day-event-block" style="${style}">
+          <div class="day-event-label">${meta.icon} ${meta.label}</div>
+          ${height >= 38 ? `<div class="day-event-meta">${author} · ${fmtTime(e.timestamp)}</div>` : ''}
+        </div>`;
+      }).join('');
+
+      feedEl.innerHTML = entries.length === 0
+        ? '<div class="msg-empty">No events on this day.</div>'
+        : `<div class="day-grid-wrap">
+            <div class="day-grid" style="height:${TOTAL_H}px">
+              ${hourRows}
+              <div class="day-events-col">${eventBlocks}</div>
+            </div>
+          </div>`;
+
+      // Scroll to first event (minus 1 hour for context), or 7am by default
+      if (entries.length) {
+        const wrap = feedEl.querySelector('.day-grid-wrap');
+        const first = entries[0].timestamp.toDate();
+        wrap.scrollTop = Math.max(0, (first.getHours() - 1) * HOUR_H);
+      } else {
+        const wrap = feedEl.querySelector('.day-grid-wrap');
+        if (wrap) wrap.scrollTop = 7 * HOUR_H;
+      }
     }
 
     function renderWeekView(entries, weekStartDate) {
@@ -828,9 +917,11 @@
 
       feed.innerHTML = '<div class="msg-empty" style="padding:8px 0">Loading…</div>';
       const entries = await fetchEntries(calMembers, start, end);
-      feed.innerHTML = calView === 'day'
-        ? renderDayView(entries, calUser)
-        : renderWeekView(entries, start);
+      if (calView === 'day') {
+        renderDayView(feed, entries, calUser);
+      } else {
+        feed.innerHTML = renderWeekView(entries, start);
+      }
     }
 
     function setupCalendarControls() {
