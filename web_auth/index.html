@@ -454,8 +454,9 @@
     }
     .last-act-icon  { font-size: 1.5rem; }
     .last-act-label { font-size: 0.62rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; }
-    .last-act-time  { font-family: 'Catamaran', sans-serif; font-weight: 900; font-size: 1.05rem; color: var(--gold); }
-    .last-act-time.stale { color: #f87171; }
+    .last-act-time              { font-family: 'Catamaran', sans-serif; font-weight: 900; font-size: 1.05rem; color: var(--gold); }
+    .last-act-time.under-threshold { color: #34d399; }
+    .last-act-time.over-threshold  { color: #f87171; }
     .last-act-tile.alerting {
       border: 1px solid rgba(248,113,113,0.45);
       animation: tile-pulse 2s ease-in-out infinite;
@@ -1688,6 +1689,15 @@
       return (Date.now() - _lastActMs[key]) / 60000 >= cfg.thresholdH * 60 + (cfg.thresholdM || 0);
     }
 
+    function elapsedClass(key) {
+      const cfg = loadAlertSettings()[key];
+      if (!cfg?.enabled) return ''; // no alert → gold (default)
+      if (!_lastActMs[key]) return '';
+      const elapsedMins = (Date.now() - _lastActMs[key]) / 60000;
+      return elapsedMins >= cfg.thresholdH * 60 + (cfg.thresholdM || 0)
+        ? 'over-threshold' : 'under-threshold';
+    }
+
     async function checkAlerts() {
       if (!_alertUser) return;
       const settings = loadAlertSettings();
@@ -1825,12 +1835,12 @@
       grid.innerHTML = LAST_ACT_TYPES.map(({ key, label, icon }) => {
         const ms    = _lastActMs[key];
         const text     = ms ? fmtElapsed(ms) : '—';
-        const stale    = ms && (Date.now() - ms) > 4 * 3600_000;
+        const cls      = elapsedClass(key);
         const alerting = isAlerting(key);
         return `<div class="last-act-tile${alerting ? ' alerting' : ''}">
           <div class="last-act-icon">${icon}</div>
           <div class="last-act-label">${label}</div>
-          <div class="last-act-time${stale ? ' stale' : ''}" data-ms="${ms || ''}">${text}</div>
+          <div class="last-act-time${cls ? ' ' + cls : ''}" data-ms="${ms || ''}">${text}</div>
         </div>`;
       }).join('');
     }
@@ -1842,7 +1852,9 @@
         const ms   = parseInt(el?.dataset.ms);
         if (el && ms) {
           el.textContent = fmtElapsed(ms);
-          el.classList.toggle('stale', (Date.now() - ms) > 4 * 3600_000);
+          const cls = elapsedClass(key);
+          el.classList.toggle('under-threshold', cls === 'under-threshold');
+          el.classList.toggle('over-threshold',  cls === 'over-threshold');
         }
         if (key) tile.classList.toggle('alerting', isAlerting(key));
       });
