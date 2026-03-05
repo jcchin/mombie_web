@@ -182,6 +182,18 @@
       border-color: var(--gold);
       color: var(--gold);
     }
+    .btn-buzz-toggle.oncall-active {
+      background: rgba(52,211,153,0.15);
+      border-color: #34d399;
+      color: #34d399;
+    }
+    .oncall-badge {
+      font-size: 0.58rem; color: #34d399;
+      background: rgba(52,211,153,0.12);
+      border: 1px solid rgba(52,211,153,0.3);
+      border-radius: 8px; padding: 2px 5px;
+      white-space: nowrap;
+    }
 
     /* ── Invite code ── */
     .invite-box {
@@ -1166,6 +1178,7 @@
         memberIds.map(uid => getDoc(doc(db, 'users', uid)))
       );
 
+      _onCallMembers = [];
       const row = document.getElementById('member-row');
       memberDocs.forEach(snap => {
         if (!snap.exists()) return;
@@ -1173,8 +1186,10 @@
         const data = snap.data();
         row.appendChild(avatarEl(data, isMe));
 
+        if (data.onCall) _onCallMembers.push(snap.id);
+
         if (isMe) {
-          // Toggle button to opt into being buzzed by others
+          // Toggle: allow family to buzz me
           let buzzOn = !!data.buzzEnabled;
           const toggleBtn = document.createElement('button');
           toggleBtn.id = 'btn-buzz-toggle';
@@ -1187,7 +1202,22 @@
           };
           row.lastChild.appendChild(toggleBtn);
 
-          // Always allow self-buzz
+          // Toggle: on-call for alerts
+          let onCallOn = !!data.onCall;
+          const onCallBtn = document.createElement('button');
+          onCallBtn.id = 'btn-oncall-toggle';
+          onCallBtn.className = 'btn-buzz-toggle' + (onCallOn ? ' oncall-active' : '');
+          onCallBtn.textContent = '📟 On-call for alerts';
+          onCallBtn.onclick = async () => {
+            onCallOn = !onCallOn;
+            await updateDoc(doc(db, 'users', currentUser.uid), { onCall: onCallOn });
+            onCallBtn.classList.toggle('oncall-active', onCallOn);
+            if (onCallOn) { if (!_onCallMembers.includes(currentUser.uid)) _onCallMembers.push(currentUser.uid); }
+            else           { _onCallMembers = _onCallMembers.filter(id => id !== currentUser.uid); }
+          };
+          row.lastChild.appendChild(onCallBtn);
+
+          // Self-buzz button
           const btn = document.createElement('button');
           btn.className = 'btn-buzz';
           btn.title = 'Buzz my phone';
@@ -1198,20 +1228,28 @@
             setTimeout(() => btn.disabled = false, 3000);
           };
           row.lastChild.appendChild(btn);
-        } else if (data.buzzEnabled) {
-          // Only show if member opted in
-          const targetUid = snap.id;
-          const name = data.displayName || 'them';
-          const btn = document.createElement('button');
-          btn.className = 'btn-buzz';
-          btn.title = `Buzz ${name}'s phone`;
-          btn.innerHTML = '<i class="fas fa-bell"></i> Buzz';
-          btn.onclick = async () => {
-            await setDoc(doc(db, 'vibrations', targetUid), { from: currentUser.uid, at: serverTimestamp() });
-            btn.disabled = true;
-            setTimeout(() => btn.disabled = false, 3000);
-          };
-          row.lastChild.appendChild(btn);
+        } else {
+          // Other member: buzz button (if opted in) + on-call badge
+          if (data.buzzEnabled) {
+            const targetUid = snap.id;
+            const name = data.displayName || 'them';
+            const btn = document.createElement('button');
+            btn.className = 'btn-buzz';
+            btn.title = `Buzz ${name}'s phone`;
+            btn.innerHTML = '<i class="fas fa-bell"></i> Buzz';
+            btn.onclick = async () => {
+              await setDoc(doc(db, 'vibrations', targetUid), { from: currentUser.uid, at: serverTimestamp() });
+              btn.disabled = true;
+              setTimeout(() => btn.disabled = false, 3000);
+            };
+            row.lastChild.appendChild(btn);
+          }
+          if (data.onCall) {
+            const badge = document.createElement('div');
+            badge.className = 'oncall-badge';
+            badge.textContent = '📟 on-call';
+            row.lastChild.appendChild(badge);
+          }
         }
       });
 
@@ -1568,8 +1606,9 @@
       bath:       { enabled: false, thresholdH: 24, thresholdM: 0, freqMins: 60 },
     };
 
-    let _lastBuzzedAt = {}; // key → ms of last buzz sent
-    let _alertUser    = null;
+    let _lastBuzzedAt  = {}; // key → ms of last buzz sent
+    let _alertUser     = null;
+    let _onCallMembers = []; // UIDs currently on-call for alerts
 
     function loadAlertSettings() {
       try { return { ...ALERT_DEFAULTS, ...JSON.parse(localStorage.getItem(ALERT_KEY) || '{}') }; }
@@ -1595,9 +1634,12 @@
         const sinceLastBuzz = (now - (_lastBuzzedAt[key] || 0)) / 60000;
         if (!_lastBuzzedAt[key] || sinceLastBuzz >= cfg.freqMins) {
           _lastBuzzedAt[key] = now;
-          await setDoc(doc(db, 'vibrations', _alertUser.uid), {
-            from: _alertUser.uid, at: serverTimestamp()
-          }).catch(() => {});
+          const recipients = _onCallMembers.length ? _onCallMembers : [_alertUser.uid];
+          await Promise.all(recipients.map(recipientUid =>
+            setDoc(doc(db, 'vibrations', recipientUid), {
+              from: _alertUser.uid, at: serverTimestamp()
+            }).catch(() => {})
+          ));
         }
       }
     }
@@ -1784,10 +1826,15 @@
       // Render family + get member UIDs for activity
       const memberIds = await renderFamily(firebaseUser, userData);
 
-      // Keep buzz toggle in sync across devices
+      // Keep toggles in sync across devices
       onSnapshot(doc(db, 'users', uid), snap => {
-        const btn = document.getElementById('btn-buzz-toggle');
-        if (btn) btn.classList.toggle('active', !!snap.data()?.buzzEnabled);
+        const d = snap.data();
+        const buzzBtn   = document.getElementById('btn-buzz-toggle');
+        const onCallBtn = document.getElementById('btn-oncall-toggle');
+        if (buzzBtn)   buzzBtn.classList.toggle('active', !!d?.buzzEnabled);
+        if (onCallBtn) onCallBtn.classList.toggle('oncall-active', !!d?.onCall);
+        if (d?.onCall) { if (!_onCallMembers.includes(uid)) _onCallMembers.push(uid); }
+        else           { _onCallMembers = _onCallMembers.filter(id => id !== uid); }
       });
       setupConnectForm(firebaseUser, userData);
       setupCSVImport(firebaseUser, memberIds);
