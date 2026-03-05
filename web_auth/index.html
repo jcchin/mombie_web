@@ -1435,16 +1435,50 @@
         importBtn.textContent = 'Importing…';
         errEl.style.display = 'none';
         try {
-          // Deterministic doc ID = uid_type_startMs → re-uploading same row is a no-op
+          // Normalize type for dedup (feed/feeding are the same activity)
+          const norm = t => CSV_TYPE_MAP[(t || '').toLowerCase()] || t;
+
+          // Build lookup of (normalizedType_timestampMs) for all pending entries
+          const pendingKeys = new Set(
+            pending.map(e => `${norm(e.type)}_${e.timestamp.toMillis()}`)
+          );
+
+          // Query existing entries in the CSV's timestamp range
+          const minTs = Timestamp.fromMillis(Math.min(...pending.map(e => e.timestamp.toMillis())));
+          const maxTs = Timestamp.fromMillis(Math.max(...pending.map(e => e.timestamp.toMillis())));
+          const existingSnap = await getDocs(query(
+            collection(db, 'babyLogs', currentUser.uid, 'entries'),
+            where('timestamp', '>=', minTs),
+            where('timestamp', '<=', maxTs)
+          ));
+
+          // Collect duplicate refs (same type + timestamp, any doc ID)
+          const refsToDelete = [];
+          existingSnap.forEach(d => {
+            const key = `${norm(d.data().type)}_${d.data().timestamp?.toMillis()}`;
+            if (pendingKeys.has(key)) refsToDelete.push(d.ref);
+          });
+
+          // Delete duplicates first
+          for (let i = 0; i < refsToDelete.length; i += 499) {
+            const delBatch = writeBatch(db);
+            refsToDelete.slice(i, i + 499).forEach(ref => delBatch.delete(ref));
+            await delBatch.commit();
+          }
+
+          // Write entries with deterministic IDs
           for (let i = 0; i < pending.length; i += 499) {
             const batch = writeBatch(db);
             pending.slice(i, i + 499).forEach(entry => {
-              const id  = `${currentUser.uid}_${entry.type}_${entry.timestamp.toMillis()}`;
+              const id = `${currentUser.uid}_${norm(entry.type)}_${entry.timestamp.toMillis()}`;
               batch.set(doc(db, 'babyLogs', currentUser.uid, 'entries', id), entry);
             });
             await batch.commit();
           }
-          showToast(`✅ Imported ${pending.length} entr${pending.length === 1 ? 'y' : 'ies'}`);
+
+          const dupeCount = refsToDelete.length - pending.length; // extras beyond what we re-wrote
+          const dupeMsg   = dupeCount > 0 ? `, removed ${dupeCount} duplicate${dupeCount === 1 ? '' : 's'}` : '';
+          showToast(`✅ Imported ${pending.length} entr${pending.length === 1 ? 'y' : 'ies'}${dupeMsg}`, 3500);
           pending = [];
           previewRow.style.display = 'none';
           filenameEl.textContent = '';
