@@ -1721,7 +1721,7 @@
               borderWidth: 1, borderRadius: 2, order: 4,
             },
             {
-              type: 'bar', label: 'BM Bottle',
+              type: 'bar', label: 'Breast Milk',
               data: breastmilk, stack: 'feeds',
               backgroundColor: 'rgba(52,211,153,0.75)',
               borderColor: 'rgba(52,211,153,0.9)',
@@ -1779,6 +1779,14 @@
       });
     }
 
+    function updateFeedingFields(val) {
+      const nursing = document.querySelector('.feeding-nursing-fields');
+      const bottle  = document.querySelector('.feeding-bottle-fields');
+      if (!nursing || !bottle) return;
+      nursing.style.display = val === 'nursing' ? '' : 'none';
+      bottle.style.display  = val !== 'nursing' ? '' : 'none';
+    }
+
     // ── Log detail panel ───────────────────────────────────
     function getDetailFields(type) {
       switch (type) {
@@ -1787,20 +1795,42 @@
             <span class="log-field-label">Type</span>
             <div class="log-chips" id="feeding-type-chips">
               <button class="log-chip active" data-val="nursing">🤱 Nursing</button>
-              <button class="log-chip" data-val="breastmilk">🥛 BM Bottle</button>
+              <button class="log-chip" data-val="breastmilk">🥛 Breast Milk</button>
               <button class="log-chip" data-val="formula">🍼 Formula</button>
             </div>
           </div>
-          <div class="log-field">
-            <span class="log-field-label">Amount</span>
-            <div class="log-field-row">
-              <input class="log-input" type="number" id="detail-oz" min="0.5" max="20" step="0.5" placeholder="2.5">
-              <span class="log-field-unit">oz</span>
+          <div class="feeding-nursing-fields">
+            <div class="log-field">
+              <span class="log-field-label">Left</span>
+              <div class="log-chips" id="nursing-left-chips">
+                <button class="log-chip active" data-val="none">None</button>
+                <button class="log-chip" data-val="short">Short</button>
+                <button class="log-chip" data-val="medium">Medium</button>
+                <button class="log-chip" data-val="long">Long</button>
+              </div>
+            </div>
+            <div class="log-field">
+              <span class="log-field-label">Right</span>
+              <div class="log-chips" id="nursing-right-chips">
+                <button class="log-chip active" data-val="none">None</button>
+                <button class="log-chip" data-val="short">Short</button>
+                <button class="log-chip" data-val="medium">Medium</button>
+                <button class="log-chip" data-val="long">Long</button>
+              </div>
             </div>
           </div>
-          <div class="log-field">
-            <span class="log-field-label">Notes</span>
-            <input class="log-input" type="text" id="detail-notes" placeholder="optional">
+          <div class="feeding-bottle-fields" style="display:none">
+            <div class="log-field">
+              <span class="log-field-label">Amount</span>
+              <div class="log-field-row">
+                <input class="log-input" type="number" id="detail-oz" min="0.5" max="20" step="0.5" placeholder="2.5">
+                <span class="log-field-unit">oz</span>
+              </div>
+            </div>
+            <div class="log-field">
+              <span class="log-field-label">Notes</span>
+              <input class="log-input" type="text" id="detail-notes" placeholder="optional">
+            </div>
           </div>`;
         case 'diaper':     return `
           <div class="log-field">
@@ -1855,11 +1885,20 @@
       const qid = id => root.querySelector(`#${id}`);
       switch (type) {
         case 'feeding': {
-          const oz          = qid('detail-oz')?.value;
-          const notes       = qid('detail-notes')?.value.trim();
           const feedingType = root.querySelector('#feeding-type-chips .log-chip.active')?.dataset.val || 'nursing';
-          const d = [oz ? `${oz}oz` : '', notes].filter(Boolean).join(' · ');
-          return { feedingType, ...(d ? { details: d } : {}) };
+          if (feedingType === 'nursing') {
+            const left  = root.querySelector('#nursing-left-chips .log-chip.active')?.dataset.val  || 'none';
+            const right = root.querySelector('#nursing-right-chips .log-chip.active')?.dataset.val || 'none';
+            const parts = [];
+            if (left  !== 'none') parts.push(`left: ${left}`);
+            if (right !== 'none') parts.push(`right: ${right}`);
+            return { feedingType, ...(parts.length ? { details: parts.join(', ') } : {}) };
+          } else {
+            const oz    = qid('detail-oz')?.value;
+            const notes = qid('detail-notes')?.value.trim();
+            const d = [oz ? `${oz}oz` : '', notes].filter(Boolean).join(' · ');
+            return { feedingType, ...(d ? { details: d } : {}) };
+          }
         }
         case 'diaper': {
           const wet   = root.querySelector('#diaper-wet-chips .log-chip.active')?.dataset.val || 'none';
@@ -1910,14 +1949,17 @@
       document.getElementById('btn-log-confirm').textContent = 'Log';
 
       // Chip toggles (single-select groups)
-      ['#feeding-type-chips', '#diaper-wet-chips', '#diaper-dirty-chips'].forEach(sel => {
+      ['#feeding-type-chips', '#nursing-left-chips', '#nursing-right-chips',
+       '#diaper-wet-chips', '#diaper-dirty-chips'].forEach(sel => {
         document.querySelectorAll(`${sel} .log-chip`).forEach(btn => {
           btn.addEventListener('click', () => {
             document.querySelectorAll(`${sel} .log-chip`).forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            if (sel === '#feeding-type-chips') updateFeedingFields(btn.dataset.val);
           });
         });
       });
+      updateFeedingFields(document.querySelector('#feeding-type-chips .log-chip.active')?.dataset.val || 'nursing');
 
       panel.style.display = 'block';
       document.getElementById('log-detail-inner').querySelector('input')?.focus();
@@ -1931,11 +1973,25 @@
           const ft = entry.feedingType || 'nursing';
           document.querySelectorAll('#feeding-type-chips .log-chip').forEach(b =>
             b.classList.toggle('active', b.dataset.val === ft));
-          const details = entry.details || '';
-          const ozMatch = details.match(/^(\d+\.?\d*)oz/);
-          if (ozMatch) document.getElementById('detail-oz').value = ozMatch[1];
-          const note = details.replace(/^\d+\.?\d*oz\s*·?\s*/, '').trim();
-          if (note) document.getElementById('detail-notes').value = note;
+          updateFeedingFields(ft);
+          const activate = (sel, val) =>
+            document.querySelectorAll(`${sel} .log-chip`).forEach(b =>
+              b.classList.toggle('active', b.dataset.val === val));
+          if (ft === 'nursing') {
+            const map = (entry.details || '').split(', ').reduce((m, p) => {
+              const [k, v] = p.split(': ');
+              if (k && v) m[k.trim()] = v.trim();
+              return m;
+            }, {});
+            activate('#nursing-left-chips',  map.left  || 'none');
+            activate('#nursing-right-chips', map.right || 'none');
+          } else {
+            const details = entry.details || '';
+            const ozMatch = details.match(/^(\d+\.?\d*)oz/);
+            if (ozMatch) document.getElementById('detail-oz').value = ozMatch[1];
+            const note = details.replace(/^\d+\.?\d*oz\s*·?\s*/, '').trim();
+            if (note) document.getElementById('detail-notes').value = note;
+          }
           break;
         }
         case 'diaper': {
@@ -1982,11 +2038,13 @@
       document.getElementById('edit-entry-inner').innerHTML = timeField + getDetailFields(entry.type);
 
       // Wire chip toggles
-      ['#diaper-wet-chips', '#diaper-dirty-chips'].forEach(sel => {
+      ['#feeding-type-chips', '#nursing-left-chips', '#nursing-right-chips',
+       '#diaper-wet-chips', '#diaper-dirty-chips'].forEach(sel => {
         document.querySelectorAll(`${sel} .log-chip`).forEach(btn => {
           btn.addEventListener('click', () => {
             document.querySelectorAll(`${sel} .log-chip`).forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            if (sel === '#feeding-type-chips') updateFeedingFields(btn.dataset.val);
           });
         });
       });
