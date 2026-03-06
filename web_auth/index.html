@@ -1779,6 +1779,14 @@
       });
     }
 
+    function checkNursingReady(btnEl) {
+      const type = document.querySelector('#feeding-type-chips .log-chip.active')?.dataset.val;
+      if (type !== 'nursing') { btnEl.disabled = false; return; }
+      const left  = document.querySelector('#nursing-left-chips .log-chip.active')?.dataset.val  || 'none';
+      const right = document.querySelector('#nursing-right-chips .log-chip.active')?.dataset.val || 'none';
+      btnEl.disabled = left === 'none' && right === 'none';
+    }
+
     function updateFeedingFields(val) {
       const nursing = document.querySelector('.feeding-nursing-fields');
       const bottle  = document.querySelector('.feeding-bottle-fields');
@@ -1949,6 +1957,7 @@
       document.getElementById('btn-log-confirm').textContent = 'Log';
 
       // Chip toggles (single-select groups)
+      const logBtn = document.getElementById('btn-log-confirm');
       ['#feeding-type-chips', '#nursing-left-chips', '#nursing-right-chips',
        '#diaper-wet-chips', '#diaper-dirty-chips'].forEach(sel => {
         document.querySelectorAll(`${sel} .log-chip`).forEach(btn => {
@@ -1956,10 +1965,13 @@
             document.querySelectorAll(`${sel} .log-chip`).forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             if (sel === '#feeding-type-chips') updateFeedingFields(btn.dataset.val);
+            if (['#feeding-type-chips','#nursing-left-chips','#nursing-right-chips'].includes(sel))
+              checkNursingReady(logBtn);
           });
         });
       });
       updateFeedingFields(document.querySelector('#feeding-type-chips .log-chip.active')?.dataset.val || 'nursing');
+      checkNursingReady(logBtn);
 
       panel.style.display = 'block';
       document.getElementById('log-detail-inner').querySelector('input')?.focus();
@@ -2038,6 +2050,7 @@
       document.getElementById('edit-entry-inner').innerHTML = timeField + getDetailFields(entry.type);
 
       // Wire chip toggles
+      const saveBtn = document.getElementById('btn-edit-save');
       ['#feeding-type-chips', '#nursing-left-chips', '#nursing-right-chips',
        '#diaper-wet-chips', '#diaper-dirty-chips'].forEach(sel => {
         document.querySelectorAll(`${sel} .log-chip`).forEach(btn => {
@@ -2045,6 +2058,8 @@
             document.querySelectorAll(`${sel} .log-chip`).forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             if (sel === '#feeding-type-chips') updateFeedingFields(btn.dataset.val);
+            if (['#feeding-type-chips','#nursing-left-chips','#nursing-right-chips'].includes(sel))
+              checkNursingReady(saveBtn);
           });
         });
       });
@@ -2055,8 +2070,8 @@
       document.getElementById('btn-edit-delete').style.display =
         entry.uid === currentUid ? 'inline-flex' : 'none';
 
-      document.getElementById('btn-edit-save').disabled = false;
-      document.getElementById('btn-edit-save').textContent = 'Save';
+      saveBtn.textContent = 'Save';
+      checkNursingReady(saveBtn);
       document.getElementById('edit-entry-modal').style.display = 'flex';
     }
 
