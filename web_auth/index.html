@@ -512,6 +512,60 @@
     .alert-input:disabled { opacity: 0.3; }
     .alert-hint { font-size: 0.72rem; color: rgba(255,255,255,0.35); }
 
+    /* ── Tile selected state ── */
+    .last-act-tile.selected {
+      background: rgba(253,204,82,0.1);
+      border: 1px solid rgba(253,204,82,0.35);
+    }
+
+    /* ── Log detail panel ── */
+    #log-detail-panel {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-top: 12px;
+    }
+    .log-detail-heading {
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.32); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .log-field {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .log-field:last-of-type { margin-bottom: 0; }
+    .log-field-label {
+      font-size: 0.72rem; color: rgba(255,255,255,0.42);
+      width: 82px; flex-shrink: 0;
+    }
+    .log-field-row { display: flex; align-items: center; gap: 8px; }
+    .log-input {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; color: #fff;
+      padding: 6px 10px; font-size: 0.88rem;
+      width: 80px; text-align: center;
+    }
+    .log-input[type="text"] { width: 100%; text-align: left; }
+    .log-input:focus { outline: none; border-color: var(--gold); }
+    .log-field-unit { font-size: 0.75rem; color: rgba(255,255,255,0.38); }
+    .log-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+    .log-chip {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 20px; color: rgba(255,255,255,0.55);
+      padding: 4px 13px; font-size: 0.78rem; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .log-chip.active {
+      background: rgba(253,204,82,0.15);
+      border-color: var(--gold); color: var(--gold);
+    }
+    .log-detail-footer {
+      display: flex; gap: 8px; margin-top: 14px;
+    }
+
     /* ── Milk chart ── */
     .milk-stats {
       display: grid;
@@ -633,6 +687,16 @@
     <div class="card-dark" id="last-activity-card" style="display:none">
       <h5><i class="fas fa-stopwatch me-1"></i> Time Since Last &nbsp;<span style="font-weight:400;font-size:0.68rem;color:rgba(255,255,255,0.28);text-transform:none;letter-spacing:0">tap to log</span></h5>
       <div class="last-act-grid" id="last-activity-grid"></div>
+
+      <div id="log-detail-panel" style="display:none">
+        <div class="log-detail-heading" id="log-detail-heading"></div>
+        <div id="log-detail-inner"></div>
+        <div class="log-detail-footer">
+          <button id="btn-log-confirm" class="btn-connect" style="min-width:76px">Log</button>
+          <button id="btn-log-cancel" class="btn-signout">Cancel</button>
+        </div>
+      </div>
+
       <button class="btn-alert-toggle" id="btn-alert-settings">
         <i class="fas fa-bell"></i> Configure alerts <i class="fas fa-chevron-up" id="alert-chevron"></i>
       </button>
@@ -1651,6 +1715,117 @@
       });
     }
 
+    // ── Log detail panel ───────────────────────────────────
+    function getDetailFields(type) {
+      switch (type) {
+        case 'feeding':    return `
+          <div class="log-field">
+            <span class="log-field-label">Amount</span>
+            <div class="log-field-row">
+              <input class="log-input" type="number" id="detail-oz" min="0.5" max="20" step="0.5" placeholder="2.5">
+              <span class="log-field-unit">oz</span>
+            </div>
+          </div>
+          <div class="log-field">
+            <span class="log-field-label">Notes</span>
+            <input class="log-input" type="text" id="detail-notes" placeholder="optional">
+          </div>`;
+        case 'diaper':     return `
+          <div class="log-field">
+            <span class="log-field-label">Type</span>
+            <div class="log-chips" id="diaper-chips">
+              <button class="log-chip active" data-val="wet">💧 Wet</button>
+              <button class="log-chip" data-val="dirty">💩 Dirty</button>
+              <button class="log-chip" data-val="both">Both</button>
+            </div>
+          </div>`;
+        case 'sleep':      return `
+          <div class="log-field">
+            <span class="log-field-label">Duration</span>
+            <div class="log-field-row">
+              <input class="log-input" type="number" id="detail-duration" min="1" max="720" step="5" placeholder="30">
+              <span class="log-field-unit">min</span>
+            </div>
+          </div>`;
+        case 'meds':       return `
+          <div class="log-field">
+            <span class="log-field-label">Name / Dose</span>
+            <input class="log-input" type="text" id="detail-notes" placeholder="e.g. Tylenol 2.5ml">
+          </div>`;
+        case 'tummy_time': return `
+          <div class="log-field">
+            <span class="log-field-label">Duration</span>
+            <div class="log-field-row">
+              <input class="log-input" type="number" id="detail-duration" min="1" max="120" step="1" placeholder="10">
+              <span class="log-field-unit">min</span>
+            </div>
+          </div>`;
+        case 'bath':       return `
+          <div class="log-field">
+            <span class="log-field-label">Notes</span>
+            <input class="log-input" type="text" id="detail-notes" placeholder="optional">
+          </div>`;
+        default: return '';
+      }
+    }
+
+    function getDetailData(type) {
+      switch (type) {
+        case 'feeding': {
+          const oz    = document.getElementById('detail-oz')?.value;
+          const notes = document.getElementById('detail-notes')?.value.trim();
+          const d = [oz ? `${oz}oz` : '', notes].filter(Boolean).join(' · ');
+          return d ? { details: d } : {};
+        }
+        case 'diaper': {
+          const chip = document.querySelector('#diaper-chips .log-chip.active');
+          return chip ? { details: chip.dataset.val } : {};
+        }
+        case 'sleep':
+        case 'tummy_time': {
+          const mins = parseFloat(document.getElementById('detail-duration')?.value);
+          return mins > 0 ? { duration: String(mins) } : {};
+        }
+        case 'meds':
+        case 'bath': {
+          const notes = document.getElementById('detail-notes')?.value.trim();
+          return notes ? { details: notes } : {};
+        }
+        default: return {};
+      }
+    }
+
+    function openDetailPanel(type, meta) {
+      const panel = document.getElementById('log-detail-panel');
+      // Toggle off if same tile tapped again
+      if (_selectedType === type) {
+        _selectedType = null;
+        panel.style.display = 'none';
+        document.querySelectorAll('.last-act-tile.selected').forEach(t => t.classList.remove('selected'));
+        return;
+      }
+      _selectedType = type;
+      document.querySelectorAll('.last-act-tile.selected').forEach(t => t.classList.remove('selected'));
+      const tile = document.querySelector(`.last-act-tile[data-type="${type}"]`);
+      if (tile) tile.classList.add('selected');
+
+      document.getElementById('log-detail-heading').textContent = `${meta.icon}  ${meta.label}`;
+      document.getElementById('log-detail-inner').innerHTML = getDetailFields(type);
+      document.getElementById('btn-log-confirm').disabled = false;
+      document.getElementById('btn-log-confirm').textContent = 'Log';
+
+      // Chip toggle for diaper
+      document.querySelectorAll('#diaper-chips .log-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#diaper-chips .log-chip').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+
+      panel.style.display = 'block';
+      document.getElementById('log-detail-inner').querySelector('input')?.focus();
+    }
+
     // ── Alert settings ─────────────────────────────────────
     const ALERT_KEY = 'mombie_alerts';
     const ALERT_DEFAULTS = {
@@ -1665,6 +1840,7 @@
     let _lastBuzzedAt  = {}; // key → ms of last buzz sent
     let _alertUser     = null;
     let _onCallMembers = []; // UIDs currently on-call for alerts
+    let _selectedType  = null; // currently open detail panel
 
     function loadAlertSettings() {
       try { return { ...ALERT_DEFAULTS, ...JSON.parse(localStorage.getItem(ALERT_KEY) || '{}') }; }
@@ -1825,7 +2001,8 @@
         const text     = ms ? fmtElapsed(ms) : '—';
         const cls      = elapsedClass(key);
         const alerting = isAlerting(key);
-        return `<div class="last-act-tile${alerting ? ' alerting' : ''}" data-type="${key}">
+        const sel = key === _selectedType ? ' selected' : '';
+        return `<div class="last-act-tile${alerting ? ' alerting' : ''}${sel}" data-type="${key}">
           <div class="last-act-icon">${icon}</div>
           <div class="last-act-label">${label}</div>
           <div class="last-act-time${cls ? ' ' + cls : ''}" data-ms="${ms || ''}">${text}</div>
@@ -1926,32 +2103,45 @@
       hideLoading();
       runOneTimeDedupe(uid).catch(() => {});
 
-      // Log via time-since tiles (event delegation survives re-renders)
-      document.getElementById('last-activity-grid').addEventListener('click', async e => {
+      // Tile tap → open detail panel
+      document.getElementById('last-activity-grid').addEventListener('click', e => {
         const tile = e.target.closest('.last-act-tile[data-type]');
-        if (!tile || tile.dataset.logging) return;
+        if (!tile) return;
         const type = tile.dataset.type;
-        tile.dataset.logging = '1';
-        tile.style.opacity = '0.5';
+        const meta = LOG_META[type] || { icon: '✅', label: type };
+        openDetailPanel(type, meta);
+      });
+
+      // Log confirm
+      document.getElementById('btn-log-confirm').addEventListener('click', async () => {
+        if (!_selectedType) return;
+        const type  = _selectedType;
+        const extra = getDetailData(type);
+        const btn   = document.getElementById('btn-log-confirm');
+        btn.disabled = true; btn.textContent = 'Logging…';
         try {
           await addDoc(collection(db, 'babyLogs', uid, 'entries'), {
-            type,
-            timestamp:  serverTimestamp(),
-            authorId:   uid,
-            authorName: firebaseUser.displayName || firebaseUser.email
+            type, timestamp: serverTimestamp(),
+            authorId: uid, authorName: firebaseUser.displayName || firebaseUser.email,
+            ...extra
           });
           const meta = LOG_META[type] || { icon: '✅', label: type };
           showToast(`${meta.icon} ${meta.label} logged!`);
-          await Promise.all([
-            loadActivity(firebaseUser, memberIds),
-            loadLastActivity(memberIds),
-          ]);
+          _selectedType = null;
+          document.getElementById('log-detail-panel').style.display = 'none';
+          document.querySelectorAll('.last-act-tile.selected').forEach(t => t.classList.remove('selected'));
+          await Promise.all([loadActivity(firebaseUser, memberIds), loadLastActivity(memberIds)]);
         } catch {
           showToast('Could not save — check Firestore rules.');
-        } finally {
-          tile.style.opacity = '1';
-          delete tile.dataset.logging;
+          btn.disabled = false; btn.textContent = 'Log';
         }
+      });
+
+      // Log cancel
+      document.getElementById('btn-log-cancel').addEventListener('click', () => {
+        _selectedType = null;
+        document.getElementById('log-detail-panel').style.display = 'none';
+        document.querySelectorAll('.last-act-tile.selected').forEach(t => t.classList.remove('selected'));
       });
 
       // Brand logo — return to main view
