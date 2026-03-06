@@ -753,7 +753,7 @@
     <div class="card-dark">
       <h5><i class="fas fa-chart-bar me-1"></i> Milk Intake Over Time</h5>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:0.8rem">
-        <span class="msg-hint" style="margin:0">Breastfeed default:</span>
+        <span class="msg-hint" style="margin:0">Nursing default:</span>
         <div style="display:flex;align-items:center;gap:6px">
           <input type="number" id="bf-oz-input" min="0.5" max="20" step="0.5" value="2.5"
             style="width:62px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);
@@ -1643,19 +1643,25 @@
 
     let _milkChartInstance = null;
 
+    function inferFeedingType(entry) {
+      if (entry.feedingType) return entry.feedingType;
+      const d = (entry.details || '').toLowerCase();
+      if (d.includes('formula')) return 'formula';
+      if (d.includes('breastmilk') || d.includes('breast milk') || d.includes('pumped')) return 'breastmilk';
+      return 'nursing';
+    }
+
     async function renderMilkChart(currentUser, memberIds) {
-      const bfOz   = getBfOz();
+      const bfOz    = getBfOz();
       const emptyEl = document.getElementById('milk-empty');
       const statsEl = document.getElementById('milk-stats-row');
       const wrapEl  = document.getElementById('milk-chart-wrap');
 
-      // Reset state for re-renders
       emptyEl.style.display = 'none';
       statsEl.style.display = 'none';
       wrapEl.style.display  = 'none';
       if (_milkChartInstance) { _milkChartInstance.destroy(); _milkChartInstance = null; }
 
-      // Collect all feed entries across family members
       const entries = [];
       await Promise.all(memberIds.map(async uid => {
         const q    = query(collection(db, 'babyLogs', uid, 'entries'), orderBy('timestamp', 'asc'), limit(2000));
@@ -1668,18 +1674,22 @@
 
       if (!entries.length) { emptyEl.style.display = 'block'; return; }
 
-      // Group by date → daily oz totals
+      // Group by date, split by feeding type
       const daily = {};
       entries.forEach(e => {
         if (!e.timestamp) return;
         const key = e.timestamp.toDate().toISOString().split('T')[0];
-        daily[key] = (daily[key] || 0) + parseOz(e.details, bfOz);
+        if (!daily[key]) daily[key] = { nursing: 0, breastmilk: 0, formula: 0 };
+        daily[key][inferFeedingType(e)] += parseOz(e.details, bfOz);
       });
 
-      const dates  = Object.keys(daily).sort();
-      const totals = dates.map(d => +daily[d].toFixed(1));
+      const dates      = Object.keys(daily).sort();
+      const nursing    = dates.map(d => +daily[d].nursing.toFixed(1));
+      const breastmilk = dates.map(d => +daily[d].breastmilk.toFixed(1));
+      const formula    = dates.map(d => +daily[d].formula.toFixed(1));
+      const totals     = dates.map((_, i) => +(nursing[i] + breastmilk[i] + formula[i]).toFixed(1));
 
-      // 7-day rolling average (trailing window)
+      // 7-day rolling average
       const rolling = totals.map((_, i) => {
         const slice = totals.slice(Math.max(0, i - 6), i + 1);
         return +(slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(1);
@@ -1690,10 +1700,10 @@
       const maxVal = Math.max(...totals), maxIdx = totals.lastIndexOf(maxVal);
       const minVal = Math.min(...totals), minIdx = totals.indexOf(minVal);
 
-      document.getElementById('milk-avg').textContent      = avg;
-      document.getElementById('milk-peak-val').textContent = maxVal.toFixed(1) + ' oz';
+      document.getElementById('milk-avg').textContent       = avg;
+      document.getElementById('milk-peak-val').textContent  = maxVal.toFixed(1) + ' oz';
       document.getElementById('milk-peak-date').textContent = fmtIsoDate(dates[maxIdx]);
-      document.getElementById('milk-min-val').textContent  = minVal.toFixed(1) + ' oz';
+      document.getElementById('milk-min-val').textContent   = minVal.toFixed(1) + ' oz';
       document.getElementById('milk-min-date').textContent  = fmtIsoDate(dates[minIdx]);
 
       statsEl.style.display = 'grid';
@@ -1704,26 +1714,32 @@
           labels: dates.map(fmtIsoDate),
           datasets: [
             {
-              type: 'bar',
-              label: 'Daily (oz)',
-              data: totals,
-              backgroundColor: 'rgba(253,204,82,0.3)',
-              borderColor:     'rgba(253,204,82,0.7)',
-              borderWidth: 1,
-              borderRadius: 3,
-              order: 2,
+              type: 'bar', label: 'Formula',
+              data: formula, stack: 'feeds',
+              backgroundColor: 'rgba(251,146,60,0.75)',
+              borderColor: 'rgba(251,146,60,0.9)',
+              borderWidth: 1, borderRadius: 2, order: 4,
             },
             {
-              type: 'line',
-              label: '7-day avg',
+              type: 'bar', label: 'BM Bottle',
+              data: breastmilk, stack: 'feeds',
+              backgroundColor: 'rgba(52,211,153,0.75)',
+              borderColor: 'rgba(52,211,153,0.9)',
+              borderWidth: 1, order: 3,
+            },
+            {
+              type: 'bar', label: 'Nursing',
+              data: nursing, stack: 'feeds',
+              backgroundColor: 'rgba(167,139,250,0.75)',
+              borderColor: 'rgba(167,139,250,0.9)',
+              borderWidth: 1, borderRadius: 2, order: 2,
+            },
+            {
+              type: 'line', label: '7-day avg',
               data: rolling,
-              borderColor: '#a78bfa',
-              backgroundColor: 'rgba(167,139,250,0.08)',
-              borderWidth: 2.5,
-              pointRadius: 0,
-              tension: 0.4,
-              fill: true,
-              order: 1,
+              borderColor: '#fdcc52',
+              backgroundColor: 'rgba(253,204,82,0.06)',
+              borderWidth: 2.5, pointRadius: 0, tension: 0.4, fill: true, order: 1,
             },
           ],
         },
@@ -1736,15 +1752,24 @@
               backgroundColor: 'rgba(15,8,40,0.92)',
               titleColor: 'rgba(255,255,255,0.75)',
               bodyColor:  'rgba(255,255,255,0.6)',
-              callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y.toFixed(1)} oz` },
+              callbacks: {
+                label: c => c.parsed.y > 0 ? ` ${c.dataset.label}: ${c.parsed.y.toFixed(1)} oz` : null,
+                footer: items => {
+                  const total = items.filter(c => c.dataset.type === 'bar')
+                                     .reduce((s, c) => s + (c.parsed.y || 0), 0);
+                  return total > 0 ? `Total: ${total.toFixed(1)} oz` : '';
+                },
+              },
             },
           },
           scales: {
             x: {
+              stacked: true,
               ticks: { color: 'rgba(255,255,255,0.4)', maxTicksLimit: 12, maxRotation: 45 },
               grid:  { color: 'rgba(255,255,255,0.05)' },
             },
             y: {
+              stacked: true,
               beginAtZero: true,
               ticks: { color: 'rgba(255,255,255,0.4)', callback: v => v + ' oz' },
               grid:  { color: 'rgba(255,255,255,0.05)' },
@@ -1758,6 +1783,14 @@
     function getDetailFields(type) {
       switch (type) {
         case 'feeding':    return `
+          <div class="log-field">
+            <span class="log-field-label">Type</span>
+            <div class="log-chips" id="feeding-type-chips">
+              <button class="log-chip active" data-val="nursing">🤱 Nursing</button>
+              <button class="log-chip" data-val="breastmilk">🥛 BM Bottle</button>
+              <button class="log-chip" data-val="formula">🍼 Formula</button>
+            </div>
+          </div>
           <div class="log-field">
             <span class="log-field-label">Amount</span>
             <div class="log-field-row">
@@ -1822,10 +1855,11 @@
       const qid = id => root.querySelector(`#${id}`);
       switch (type) {
         case 'feeding': {
-          const oz    = qid('detail-oz')?.value;
-          const notes = qid('detail-notes')?.value.trim();
+          const oz          = qid('detail-oz')?.value;
+          const notes       = qid('detail-notes')?.value.trim();
+          const feedingType = root.querySelector('#feeding-type-chips .log-chip.active')?.dataset.val || 'nursing';
           const d = [oz ? `${oz}oz` : '', notes].filter(Boolean).join(' · ');
-          return d ? { details: d } : {};
+          return { feedingType, ...(d ? { details: d } : {}) };
         }
         case 'diaper': {
           const wet   = root.querySelector('#diaper-wet-chips .log-chip.active')?.dataset.val || 'none';
@@ -1875,8 +1909,8 @@
       document.getElementById('btn-log-confirm').disabled = false;
       document.getElementById('btn-log-confirm').textContent = 'Log';
 
-      // Chip toggles for diaper (two independent groups)
-      ['#diaper-wet-chips', '#diaper-dirty-chips'].forEach(sel => {
+      // Chip toggles (single-select groups)
+      ['#feeding-type-chips', '#diaper-wet-chips', '#diaper-dirty-chips'].forEach(sel => {
         document.querySelectorAll(`${sel} .log-chip`).forEach(btn => {
           btn.addEventListener('click', () => {
             document.querySelectorAll(`${sel} .log-chip`).forEach(b => b.classList.remove('active'));
@@ -1894,6 +1928,9 @@
     function populateEditFields(type, entry) {
       switch (type) {
         case 'feeding': {
+          const ft = entry.feedingType || 'nursing';
+          document.querySelectorAll('#feeding-type-chips .log-chip').forEach(b =>
+            b.classList.toggle('active', b.dataset.val === ft));
           const details = entry.details || '';
           const ozMatch = details.match(/^(\d+\.?\d*)oz/);
           if (ozMatch) document.getElementById('detail-oz').value = ozMatch[1];
