@@ -340,6 +340,7 @@
     .activity-icon { font-size: 1.3rem; width: 32px; text-align: center; flex-shrink: 0; }
     .activity-meta { flex: 1; min-width: 0; }
     .activity-type   { font-size: 0.88rem; font-weight: 700; }
+    .activity-detail { font-size: 0.72rem; color: rgba(255,255,255,0.55); margin-top: 1px; }
     .activity-author { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
     .activity-time   { font-size: 0.72rem; color: rgba(255,255,255,0.35); white-space: nowrap; }
     /* Day timeline view */
@@ -732,8 +733,8 @@
         <h5 style="margin-bottom:0"><i class="fas fa-calendar me-1"></i> Activity</h5>
         <div class="cal-right">
           <div class="view-toggle">
-            <button class="btn-view active" data-view="day">Day</button>
-            <button class="btn-view" data-view="week">Week</button>
+            <button class="btn-view" data-view="day">Day</button>
+            <button class="btn-view active" data-view="week">Week</button>
             <button class="btn-view" data-view="list">List</button>
           </div>
           <div class="cal-nav">
@@ -951,7 +952,7 @@
     }
 
     // ── Calendar state ─────────────────────────────────────
-    let calView = 'day';
+    let calView = 'week';
     let calDate = new Date();
     let calUser = null;
     let calMembers = [];
@@ -1164,10 +1165,19 @@
       return entries.map(e => {
         const meta = LOG_META[e.type] || { icon: '❓', label: e.type };
         const isMe = e.uid === currentUser.uid;
+        const detailStr = (() => {
+          if (e.type !== 'feeding' && e.type !== 'feed') return '';
+          const ft = e.feedingType, d = e.details || '';
+          if (ft === 'nursing')    return d ? '🤱 ' + d.split(', ').map(p => p.replace(/^(\w)/, c => c.toUpperCase())).join(' · ') : '🤱 Nursing';
+          if (ft === 'breastmilk') return d ? `🍼 ${d}` : '🍼 Breast Milk';
+          if (ft === 'formula')    return d ? `🧸 ${d}` : '🧸 Formula';
+          return d;
+        })();
         return `<div class="activity-entry cal-event" data-entry-id="${e.id}" data-uid="${e.uid}">
           <div class="activity-icon">${meta.icon}</div>
           <div class="activity-meta">
             <div class="activity-type">${meta.label}</div>
+            ${detailStr ? `<div class="activity-detail">${detailStr}</div>` : ''}
             <div class="activity-author">${isMe ? 'You' : (e.authorName || 'Family member')}</div>
           </div>
           <div class="activity-time">${timeAgo(e.timestamp)}</div>
