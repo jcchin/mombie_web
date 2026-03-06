@@ -635,14 +635,14 @@
     </div>
 
     <!-- Log a baby event -->
-    <div class="card-dark" style="display:none">
+    <div class="card-dark">
       <h5><i class="fas fa-baby me-1"></i> Log Baby Event</h5>
       <div class="log-buttons">
         <button class="btn-log feeding" data-type="feeding">
           <span class="log-icon">🍼</span>Feeding
         </button>
         <button class="btn-log diaper" data-type="diaper">
-          <span class="log-icon">👶</span>Diaper
+          <span class="log-icon">💩</span>Diaper
         </button>
         <button class="btn-log sleep" data-type="sleep">
           <span class="log-icon">💤</span>Sleep
@@ -801,9 +801,9 @@
     const LOG_META = {
       feeding:    { icon: '🍼', label: 'Feeding'    },
       feed:       { icon: '🍼', label: 'Feeding'    },
-      diaper:     { icon: '👶', label: 'Diaper'     },
+      diaper:     { icon: '💩', label: 'Diaper'     },
       meds:       { icon: '💊', label: 'Meds'       },
-      tummy_time: { icon: '⏱', label: 'Tummy Time' },
+      tummy_time: { icon: '🐛', label: 'Tummy Time' },
       bath:       { icon: '🛁', label: 'Bath'       },
       sleep:      { icon: '💤', label: 'Sleep'      },
     };
@@ -1708,10 +1708,9 @@
         const elapsedMins = (now - _lastActMs[key]) / 60000;
         if (elapsedMins < cfg.thresholdH * 60 + (cfg.thresholdM || 0)) continue;
         const sinceLastBuzz = (now - (_lastBuzzedAt[key] || 0)) / 60000;
-        if (!_lastBuzzedAt[key] || sinceLastBuzz >= cfg.freqMins) {
+        if (_onCallMembers.length && (!_lastBuzzedAt[key] || sinceLastBuzz >= cfg.freqMins)) {
           _lastBuzzedAt[key] = now;
-          const recipients = _onCallMembers.length ? _onCallMembers : [_alertUser.uid];
-          await Promise.all(recipients.map(recipientUid =>
+          await Promise.all(_onCallMembers.map(recipientUid =>
             setDoc(doc(db, 'vibrations', recipientUid), {
               from: _alertUser.uid, at: serverTimestamp()
             }).catch(() => {})
