@@ -395,6 +395,15 @@
     }
     .week-day-num.today { background: var(--gold); color: #1a1040; }
     .week-day-body { position: relative; }
+    .time-now-line {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: #ef4444; pointer-events: none; z-index: 10;
+    }
+    .time-now-line::before {
+      content: ''; position: absolute;
+      left: -4px; top: -4px; width: 10px; height: 10px;
+      border-radius: 50%; background: #ef4444;
+    }
     .week-hour-line { position: absolute; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.07); }
 
     /* ── Toast ── */
@@ -1025,7 +1034,7 @@
       });
     }
 
-    function renderDayView(feedEl, entries, currentUser) {
+    function renderDayView(feedEl, entries, currentUser, showNow = false) {
       const TOTAL_H = 24 * HOUR_H;
 
       // Hour rows
@@ -1061,22 +1070,26 @@
         </div>`;
       }).join('');
 
+      const now = new Date();
+      const nowPx = (now.getHours() + now.getMinutes() / 60) * HOUR_H;
+      const nowLine = showNow ? `<div class="time-now-line" style="top:${nowPx.toFixed(1)}px"></div>` : '';
+
       feedEl.innerHTML = entries.length === 0
-        ? '<div class="msg-empty">No events on this day.</div>'
+        ? `<div class="day-grid-wrap">
+            <div class="day-grid" style="height:${TOTAL_H}px">
+              ${hourRows}${nowLine}
+            </div>
+          </div>`
         : `<div class="day-grid-wrap">
             <div class="day-grid" style="height:${TOTAL_H}px">
-              ${hourRows}
+              ${hourRows}${nowLine}
               <div class="day-events-col">${eventBlocks}</div>
             </div>
           </div>`;
 
       // Scroll so current time is centered
       const wrap = feedEl.querySelector('.day-grid-wrap');
-      if (wrap) {
-        const now = new Date();
-        const nowPx = (now.getHours() + now.getMinutes() / 60) * HOUR_H;
-        wrap.scrollTop = Math.max(0, nowPx - wrap.clientHeight / 2);
-      }
+      if (wrap) wrap.scrollTop = Math.max(0, nowPx - wrap.clientHeight / 2);
     }
 
     function renderWeekView(entries, weekStartDate) {
@@ -1133,7 +1146,7 @@
             <div class="week-day-abbr">${DAY_ABBR[i]}</div>
             <div class="week-day-num${isToday ? ' today' : ''}">${d.getDate()}</div>
           </div>
-          <div class="week-day-body" style="height:${TOTAL_H}px">${lines}${events}</div>
+          <div class="week-day-body" style="height:${TOTAL_H}px">${lines}${events}${(() => { if (!isToday) return ''; const n = new Date(); return `<div class="time-now-line" style="top:${((n.getHours() + n.getMinutes()/60)*HOUR_H).toFixed(1)}px"></div>`; })()}</div>
         </div>`;
       }).join('');
 
@@ -1209,7 +1222,8 @@
       feed.innerHTML = '<div class="msg-empty" style="padding:8px 0">Loading…</div>';
       const entries = await fetchEntries(calMembers, start, end);
       if (calView === 'day') {
-        renderDayView(feed, entries, calUser);
+        const isViewingToday = dayStart(calDate).getTime() === dayStart(new Date()).getTime();
+        renderDayView(feed, entries, calUser, isViewingToday);
       } else {
         feed.innerHTML = renderWeekView(entries, start);
         const wrap = feed.querySelector('.week-grid-wrap');
