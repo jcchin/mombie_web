@@ -1070,14 +1070,12 @@
             </div>
           </div>`;
 
-      // Scroll to first event (minus 1 hour for context), or 7am by default
-      if (entries.length) {
-        const wrap = feedEl.querySelector('.day-grid-wrap');
-        const first = entries[0].timestamp.toDate();
-        wrap.scrollTop = Math.max(0, (first.getHours() - 1) * HOUR_H);
-      } else {
-        const wrap = feedEl.querySelector('.day-grid-wrap');
-        if (wrap) wrap.scrollTop = 7 * HOUR_H;
+      // Scroll so current time is centered
+      const wrap = feedEl.querySelector('.day-grid-wrap');
+      if (wrap) {
+        const now = new Date();
+        const nowPx = (now.getHours() + now.getMinutes() / 60) * HOUR_H;
+        wrap.scrollTop = Math.max(0, nowPx - wrap.clientHeight / 2);
       }
     }
 
@@ -1216,10 +1214,9 @@
         feed.innerHTML = renderWeekView(entries, start);
         const wrap = feed.querySelector('.week-grid-wrap');
         if (wrap) {
-          const first = entries.find(e => e.timestamp);
-          wrap.scrollTop = first
-            ? Math.max(0, (first.timestamp.toDate().getHours() - 1) * HOUR_H)
-            : 7 * HOUR_H;
+          const now = new Date();
+          const nowPx = (now.getHours() + now.getMinutes() / 60) * HOUR_H;
+          wrap.scrollTop = Math.max(0, nowPx - wrap.clientHeight / 2);
         }
       }
     }
