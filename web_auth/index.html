@@ -548,6 +548,7 @@
       width: 80px; text-align: center;
     }
     .log-input[type="text"] { width: 100%; text-align: left; }
+    .log-input[type="time"] { width: auto; color-scheme: dark; }
     .log-input:focus { outline: none; border-color: var(--gold); }
     .log-field-unit { font-size: 0.75rem; color: rgba(255,255,255,0.38); }
     .log-chips { display: flex; gap: 7px; flex-wrap: wrap; }
@@ -1810,7 +1811,14 @@
       if (tile) tile.classList.add('selected');
 
       document.getElementById('log-detail-heading').textContent = `${meta.icon}  ${meta.label}`;
-      document.getElementById('log-detail-inner').innerHTML = getDetailFields(type);
+      const now = new Date();
+      const hh  = String(now.getHours()).padStart(2, '0');
+      const mm  = String(now.getMinutes()).padStart(2, '0');
+      const timeField = `<div class="log-field">
+        <span class="log-field-label">Time</span>
+        <input class="log-input" type="time" id="detail-time" value="${hh}:${mm}">
+      </div>`;
+      document.getElementById('log-detail-inner').innerHTML = timeField + getDetailFields(type);
       document.getElementById('btn-log-confirm').disabled = false;
       document.getElementById('btn-log-confirm').textContent = 'Log';
 
@@ -2120,8 +2128,15 @@
         const btn   = document.getElementById('btn-log-confirm');
         btn.disabled = true; btn.textContent = 'Logging…';
         try {
+          const timeVal = document.getElementById('detail-time')?.value;
+          let ts = serverTimestamp();
+          if (timeVal) {
+            const [h, m] = timeVal.split(':').map(Number);
+            const d = new Date(); d.setHours(h, m, 0, 0);
+            ts = Timestamp.fromDate(d);
+          }
           await addDoc(collection(db, 'babyLogs', uid, 'entries'), {
-            type, timestamp: serverTimestamp(),
+            type, timestamp: ts,
             authorId: uid, authorName: firebaseUser.displayName || firebaseUser.email,
             ...extra
           });
