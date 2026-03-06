@@ -2174,13 +2174,13 @@
           <span class="alert-hint">after</span>
           <input type="number" class="alert-input alert-threshold-h" value="${cfg.thresholdH}"
             min="0" max="48" step="1" ${cfg.enabled ? '' : 'disabled'}>
-          <span class="alert-hint">h</span>
+          <span class="alert-hint">hr</span>
           <input type="number" class="alert-input alert-threshold-m" value="${cfg.thresholdM || 0}"
             min="0" max="59" step="5" ${cfg.enabled ? '' : 'disabled'}>
-          <span class="alert-hint">m, repeat every</span>
+          <span class="alert-hint">min, repeat alert every</span>
           <input type="number" class="alert-input alert-freq" value="${cfg.freqMins}"
             min="5" max="240" step="5" ${cfg.enabled ? '' : 'disabled'}>
-          <span class="alert-hint">min</span>
+          <span class="alert-hint">min, until logged</span>
         </div>`;
       }).join('');
 
