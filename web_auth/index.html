@@ -1733,11 +1733,21 @@
           </div>`;
         case 'diaper':     return `
           <div class="log-field">
-            <span class="log-field-label">Type</span>
-            <div class="log-chips" id="diaper-chips">
-              <button class="log-chip active" data-val="wet">💧 Wet</button>
-              <button class="log-chip" data-val="dirty">💩 Dirty</button>
-              <button class="log-chip" data-val="both">Both</button>
+            <span class="log-field-label">💧 Wet</span>
+            <div class="log-chips" id="diaper-wet-chips">
+              <button class="log-chip active" data-val="none">None</button>
+              <button class="log-chip" data-val="small">Small</button>
+              <button class="log-chip" data-val="medium">Medium</button>
+              <button class="log-chip" data-val="large">Large</button>
+            </div>
+          </div>
+          <div class="log-field">
+            <span class="log-field-label">💩 Dirty</span>
+            <div class="log-chips" id="diaper-dirty-chips">
+              <button class="log-chip active" data-val="none">None</button>
+              <button class="log-chip" data-val="small">Small</button>
+              <button class="log-chip" data-val="medium">Medium</button>
+              <button class="log-chip" data-val="large">Large</button>
             </div>
           </div>`;
         case 'sleep':      return `
@@ -1779,8 +1789,12 @@
           return d ? { details: d } : {};
         }
         case 'diaper': {
-          const chip = document.querySelector('#diaper-chips .log-chip.active');
-          return chip ? { details: chip.dataset.val } : {};
+          const wet   = document.querySelector('#diaper-wet-chips .log-chip.active')?.dataset.val || 'none';
+          const dirty = document.querySelector('#diaper-dirty-chips .log-chip.active')?.dataset.val || 'none';
+          const parts = [];
+          if (wet   !== 'none') parts.push(`wet: ${wet}`);
+          if (dirty !== 'none') parts.push(`dirty: ${dirty}`);
+          return parts.length ? { details: parts.join(', ') } : {};
         }
         case 'sleep':
         case 'tummy_time': {
@@ -1822,11 +1836,13 @@
       document.getElementById('btn-log-confirm').disabled = false;
       document.getElementById('btn-log-confirm').textContent = 'Log';
 
-      // Chip toggle for diaper
-      document.querySelectorAll('#diaper-chips .log-chip').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('#diaper-chips .log-chip').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
+      // Chip toggles for diaper (two independent groups)
+      ['#diaper-wet-chips', '#diaper-dirty-chips'].forEach(sel => {
+        document.querySelectorAll(`${sel} .log-chip`).forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll(`${sel} .log-chip`).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+          });
         });
       });
 
