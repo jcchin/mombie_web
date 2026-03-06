@@ -1840,6 +1840,10 @@
                 <button class="log-chip" data-val="long">Long</button>
               </div>
             </div>
+            <div class="log-field">
+              <span class="log-field-label">Notes</span>
+              <input class="log-input" type="text" id="detail-nursing-notes" placeholder="volume overrides default (e.g. 4oz, 120ml)">
+            </div>
           </div>
           <div class="feeding-bottle-fields" style="display:none">
             <div class="log-field">
@@ -1911,10 +1915,12 @@
           if (feedingType === 'nursing') {
             const left  = root.querySelector('#nursing-left-chips .log-chip.active')?.dataset.val  || 'none';
             const right = root.querySelector('#nursing-right-chips .log-chip.active')?.dataset.val || 'none';
+            const notes = root.querySelector('#detail-nursing-notes')?.value.trim() || '';
             const parts = [];
             if (left  !== 'none') parts.push(`left: ${left}`);
             if (right !== 'none') parts.push(`right: ${right}`);
-            return { feedingType, ...(parts.length ? { details: parts.join(', ') } : {}) };
+            const d = [parts.join(', '), notes].filter(Boolean).join(' · ');
+            return { feedingType, ...(d ? { details: d } : {}) };
           } else {
             const oz    = qid('detail-oz')?.value;
             const notes = qid('detail-notes')?.value.trim();
@@ -2004,13 +2010,17 @@
             document.querySelectorAll(`${sel} .log-chip`).forEach(b =>
               b.classList.toggle('active', b.dataset.val === val));
           if (ft === 'nursing') {
-            const map = (entry.details || '').split(', ').reduce((m, p) => {
+            const parts  = (entry.details || '').split(' · ');
+            const sides  = parts.filter(p => /^(left|right):/.test(p.trim()));
+            const notes  = parts.filter(p => !/^(left|right):/.test(p.trim())).join(' · ');
+            const map = sides.join(', ').split(', ').reduce((m, p) => {
               const [k, v] = p.split(': ');
               if (k && v) m[k.trim()] = v.trim();
               return m;
             }, {});
             activate('#nursing-left-chips',  map.left  || 'none');
             activate('#nursing-right-chips', map.right || 'none');
+            if (notes) document.getElementById('detail-nursing-notes').value = notes;
           } else {
             const details = entry.details || '';
             const ozMatch = details.match(/^(\d+\.?\d*)oz/);
