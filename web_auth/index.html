@@ -451,7 +451,12 @@
       flex-direction: column;
       align-items: center;
       gap: 4px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      user-select: none;
     }
+    .last-act-tile:hover  { background: rgba(255,255,255,0.12); }
+    .last-act-tile:active { transform: scale(0.93); }
     .last-act-icon  { font-size: 1.5rem; }
     .last-act-label { font-size: 0.62rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; }
     .last-act-time              { font-family: 'Catamaran', sans-serif; font-weight: 900; font-size: 1.05rem; color: var(--gold); }
@@ -626,28 +631,12 @@
 
     <!-- Last activity timers -->
     <div class="card-dark" id="last-activity-card" style="display:none">
-      <h5><i class="fas fa-stopwatch me-1"></i> Time Since Last</h5>
+      <h5><i class="fas fa-stopwatch me-1"></i> Time Since Last &nbsp;<span style="font-weight:400;font-size:0.68rem;color:rgba(255,255,255,0.28);text-transform:none;letter-spacing:0">tap to log</span></h5>
       <div class="last-act-grid" id="last-activity-grid"></div>
       <button class="btn-alert-toggle" id="btn-alert-settings">
         <i class="fas fa-bell"></i> Configure alerts <i class="fas fa-chevron-up" id="alert-chevron"></i>
       </button>
       <div class="alert-settings" id="alert-settings" style="display:block"></div>
-    </div>
-
-    <!-- Log a baby event -->
-    <div class="card-dark">
-      <h5><i class="fas fa-baby me-1"></i> Log Baby Event</h5>
-      <div class="log-buttons">
-        <button class="btn-log feeding" data-type="feeding">
-          <span class="log-icon">🍼</span>Feeding
-        </button>
-        <button class="btn-log diaper" data-type="diaper">
-          <span class="log-icon">💩</span>Diaper
-        </button>
-        <button class="btn-log sleep" data-type="sleep">
-          <span class="log-icon">💤</span>Sleep
-        </button>
-      </div>
     </div>
 
     <!-- Milk intake chart -->
@@ -1836,7 +1825,7 @@
         const text     = ms ? fmtElapsed(ms) : '—';
         const cls      = elapsedClass(key);
         const alerting = isAlerting(key);
-        return `<div class="last-act-tile${alerting ? ' alerting' : ''}">
+        return `<div class="last-act-tile${alerting ? ' alerting' : ''}" data-type="${key}">
           <div class="last-act-icon">${icon}</div>
           <div class="last-act-label">${label}</div>
           <div class="last-act-time${cls ? ' ' + cls : ''}" data-ms="${ms || ''}">${text}</div>
@@ -1937,29 +1926,32 @@
       hideLoading();
       runOneTimeDedupe(uid).catch(() => {});
 
-      // Baby log buttons
-      document.querySelectorAll('.btn-log').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const type = btn.dataset.type;
-          btn.style.opacity = '0.5';
-          try {
-            await addDoc(collection(db, 'babyLogs', uid, 'entries'), {
-              type,
-              timestamp:  serverTimestamp(),
-              authorId:   uid,
-              authorName: firebaseUser.displayName || firebaseUser.email
-            });
-            showToast(`${LOG_META[type].icon} ${LOG_META[type].label} logged!`);
-            await Promise.all([
-              loadActivity(firebaseUser, memberIds),
-              loadLastActivity(memberIds),
-            ]);
-          } catch (e) {
-            showToast('Could not save — check Firestore rules.');
-          } finally {
-            btn.style.opacity = '1';
-          }
-        });
+      // Log via time-since tiles (event delegation survives re-renders)
+      document.getElementById('last-activity-grid').addEventListener('click', async e => {
+        const tile = e.target.closest('.last-act-tile[data-type]');
+        if (!tile || tile.dataset.logging) return;
+        const type = tile.dataset.type;
+        tile.dataset.logging = '1';
+        tile.style.opacity = '0.5';
+        try {
+          await addDoc(collection(db, 'babyLogs', uid, 'entries'), {
+            type,
+            timestamp:  serverTimestamp(),
+            authorId:   uid,
+            authorName: firebaseUser.displayName || firebaseUser.email
+          });
+          const meta = LOG_META[type] || { icon: '✅', label: type };
+          showToast(`${meta.icon} ${meta.label} logged!`);
+          await Promise.all([
+            loadActivity(firebaseUser, memberIds),
+            loadLastActivity(memberIds),
+          ]);
+        } catch {
+          showToast('Could not save — check Firestore rules.');
+        } finally {
+          tile.style.opacity = '1';
+          delete tile.dataset.logging;
+        }
       });
 
       // Brand logo — return to main view
