@@ -1053,8 +1053,10 @@
         const colW      = 100 / numCols;
         const style     = `top:${top}px;height:${height}px;background:${color.bg};border-color:${color.border};`
                         + `left:${e.col * colW}%;width:${colW}%;color:${color.text};`;
+        const detail = feedingDetail(e);
         return `<div class="day-event-block cal-event" data-entry-id="${e.id}" data-uid="${e.uid}" style="${style}">
           <div class="day-event-label">${meta.icon} ${meta.label}</div>
+          ${height >= 30 && detail ? `<div class="day-event-label" style="font-weight:400;opacity:0.8;font-size:0.63rem">${detail}</div>` : ''}
           ${height >= 38 ? `<div class="day-event-meta">${author} · ${fmtTime(e.timestamp)}</div>` : ''}
         </div>`;
       }).join('');
@@ -1165,14 +1167,7 @@
       return entries.map(e => {
         const meta = LOG_META[e.type] || { icon: '❓', label: e.type };
         const isMe = e.uid === currentUser.uid;
-        const detailStr = (() => {
-          if (e.type !== 'feeding' && e.type !== 'feed') return '';
-          const ft = e.feedingType, d = e.details || '';
-          if (ft === 'nursing')    return d ? '🤱 ' + d.split(', ').map(p => p.replace(/^(\w)/, c => c.toUpperCase())).join(' · ') : '🤱 Nursing';
-          if (ft === 'breastmilk') return d ? `🍼 ${d}` : '🍼 Breast Milk';
-          if (ft === 'formula')    return d ? `🧸 ${d}` : '🧸 Formula';
-          return d;
-        })();
+        const detailStr = feedingDetail(e);
         return `<div class="activity-entry cal-event" data-entry-id="${e.id}" data-uid="${e.uid}">
           <div class="activity-icon">${meta.icon}</div>
           <div class="activity-meta">
@@ -1652,6 +1647,15 @@
     }
 
     let _milkChartInstance = null;
+
+    function feedingDetail(e) {
+      if (e.type !== 'feeding' && e.type !== 'feed') return '';
+      const ft = e.feedingType, d = e.details || '';
+      if (ft === 'nursing')    return d ? '🤱 ' + d.split(', ').map(p => p.replace(/^(\w)/, c => c.toUpperCase())).join(' · ') : '🤱 Nursing';
+      if (ft === 'breastmilk') return d ? `🍼 ${d}` : '🍼 Breast Milk';
+      if (ft === 'formula')    return d ? `🧸 ${d}` : '🧸 Formula';
+      return d;
+    }
 
     function inferFeedingType(entry) {
       if (entry.feedingType) return entry.feedingType;
