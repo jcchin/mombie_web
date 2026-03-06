@@ -650,7 +650,10 @@
         <div id="family-full-msg" class="family-full" style="display:none">
           <i class="fas fa-check-circle me-1"></i>Family is full (9/9 members).
         </div>
-        <div id="family-invite-box" class="invite-box">
+        <button class="btn-alert-toggle" id="btn-invite-toggle">
+          <i class="fas fa-user-plus"></i> Invite members <i class="fas fa-chevron-down" id="invite-chevron"></i>
+        </button>
+        <div id="family-invite-box" class="invite-box" style="display:none">
           <div>
             <div class="invite-box-label">Share your code to invite more members</div>
             <div class="invite-code" id="invite-code-display">––––––</div>
@@ -1958,6 +1961,14 @@
         thresholdH.addEventListener('change', persist);
         thresholdM.addEventListener('change', persist);
         freq.addEventListener('change', persist);
+      });
+
+      document.getElementById('btn-invite-toggle').addEventListener('click', () => {
+        const panel   = document.getElementById('family-invite-box');
+        const chevron = document.getElementById('invite-chevron');
+        const open    = panel.style.display === 'flex';
+        panel.style.display = open ? 'none' : 'flex';
+        chevron.className   = open ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
       });
 
       document.getElementById('btn-alert-settings').addEventListener('click', () => {
