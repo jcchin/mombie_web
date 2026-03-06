@@ -682,6 +682,11 @@
         </div>
         <div class="msg-error" id="connect-error" style="display:none"></div>
       </div>
+
+      <button class="btn-alert-toggle" id="btn-alert-settings">
+        <i class="fas fa-bell"></i> Configure alerts <i class="fas fa-chevron-up" id="alert-chevron"></i>
+      </button>
+      <div class="alert-settings" id="alert-settings" style="display:block"></div>
     </div>
 
     <!-- Last activity timers -->
@@ -698,10 +703,29 @@
         </div>
       </div>
 
-      <button class="btn-alert-toggle" id="btn-alert-settings">
-        <i class="fas fa-bell"></i> Configure alerts <i class="fas fa-chevron-up" id="alert-chevron"></i>
-      </button>
-      <div class="alert-settings" id="alert-settings" style="display:block"></div>
+    </div>
+
+    <!-- Activity calendar -->
+    <div class="card-dark">
+      <div class="cal-toolbar">
+        <h5 style="margin-bottom:0"><i class="fas fa-calendar me-1"></i> Activity</h5>
+        <div class="cal-right">
+          <div class="view-toggle">
+            <button class="btn-view active" data-view="day">Day</button>
+            <button class="btn-view" data-view="week">Week</button>
+            <button class="btn-view" data-view="list">List</button>
+          </div>
+          <div class="cal-nav">
+            <button class="btn-cal-nav" id="btn-cal-prev">‹</button>
+            <span id="cal-label"></span>
+            <button class="btn-cal-nav" id="btn-cal-next">›</button>
+            <button class="btn-cal-today" id="btn-cal-today">Today</button>
+          </div>
+        </div>
+      </div>
+      <div id="activity-feed">
+        <div class="msg-empty">No events logged yet.</div>
+      </div>
     </div>
 
     <!-- Milk intake chart -->
@@ -744,29 +768,6 @@
       </div>
       <div id="milk-chart-wrap" style="display:none">
         <canvas id="milk-chart" height="220"></canvas>
-      </div>
-    </div>
-
-    <!-- Activity calendar -->
-    <div class="card-dark">
-      <div class="cal-toolbar">
-        <h5 style="margin-bottom:0"><i class="fas fa-calendar me-1"></i> Activity</h5>
-        <div class="cal-right">
-          <div class="view-toggle">
-            <button class="btn-view active" data-view="day">Day</button>
-            <button class="btn-view" data-view="week">Week</button>
-            <button class="btn-view" data-view="list">List</button>
-          </div>
-          <div class="cal-nav">
-            <button class="btn-cal-nav" id="btn-cal-prev">‹</button>
-            <span id="cal-label"></span>
-            <button class="btn-cal-nav" id="btn-cal-next">›</button>
-            <button class="btn-cal-today" id="btn-cal-today">Today</button>
-          </div>
-        </div>
-      </div>
-      <div id="activity-feed">
-        <div class="msg-empty">No events logged yet.</div>
       </div>
     </div>
 
