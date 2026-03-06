@@ -471,6 +471,24 @@
       50%       { box-shadow: 0 0 0 5px rgba(248,113,113,0.18); }
     }
     /* Alert config panel */
+    .cal-event { cursor: pointer; }
+    .cal-event:hover { opacity: 0.8; }
+    #edit-entry-modal {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.72);
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    #edit-entry-panel {
+      background: #1a1040; border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px; padding: 20px; width: 100%; max-width: 400px;
+      max-height: 88vh; overflow-y: auto;
+    }
+    .btn-delete-entry {
+      background: none; border: 1px solid rgba(248,113,113,0.4);
+      border-radius: 8px; color: #f87171; padding: 6px 14px;
+      font-size: 0.82rem; cursor: pointer;
+    }
+    .btn-delete-entry:hover { background: rgba(248,113,113,0.1); }
     .btn-alert-toggle {
       background: none; border: none;
       color: rgba(255,255,255,0.55); font-size: 0.78rem;
@@ -776,6 +794,21 @@
 
   </div>
 
+  <!-- Edit entry modal -->
+  <div id="edit-entry-modal" style="display:none">
+    <div id="edit-entry-panel">
+      <div class="log-detail-heading" id="edit-entry-heading"></div>
+      <div id="edit-entry-inner"></div>
+      <div class="log-detail-footer" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px">
+        <button class="btn-delete-entry" id="btn-edit-delete"><i class="fas fa-trash-alt me-1"></i>Delete</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-signout" id="btn-edit-cancel">Cancel</button>
+          <button class="btn-connect" id="btn-edit-save" style="min-width:76px">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings view -->
   <div id="settings-view" class="dashboard" style="display:none">
 
@@ -822,7 +855,8 @@
              updateDoc, addDoc, collection,
              query, where, orderBy, limit, getDocs,
              serverTimestamp, arrayUnion,
-             writeBatch, Timestamp, onSnapshot }         from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
+             writeBatch, Timestamp, onSnapshot,
+             deleteDoc }                                  from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
 
     const FAMILY_MAX = 9;
 
@@ -1018,7 +1052,7 @@
         const colW      = 100 / numCols;
         const style     = `top:${top}px;height:${height}px;background:${color.bg};border-color:${color.border};`
                         + `left:${e.col * colW}%;width:${colW}%;color:${color.text};`;
-        return `<div class="day-event-block" style="${style}">
+        return `<div class="day-event-block cal-event" data-entry-id="${e.id}" data-uid="${e.uid}" style="${style}">
           <div class="day-event-label">${meta.icon} ${meta.label}</div>
           ${height >= 38 ? `<div class="day-event-meta">${author} · ${fmtTime(e.timestamp)}</div>` : ''}
         </div>`;
@@ -1088,7 +1122,7 @@
           const style    = `top:${top}px;height:${height}px;background:${color.bg};border-color:${color.border};`
                          + `color:${color.text};left:${e.col * colW}%;width:${colW}%;padding:2px 4px;`;
           const showLabel = height >= 28;
-          return `<div class="day-event-block" style="${style}">
+          return `<div class="day-event-block cal-event" data-entry-id="${e.id}" data-uid="${e.uid}" style="${style}">
             <div class="day-event-label" style="font-size:0.65rem">${meta.icon}${showLabel ? ' ' + meta.label : ''}</div>
           </div>`;
         }).join('');
@@ -1130,7 +1164,7 @@
       return entries.map(e => {
         const meta = LOG_META[e.type] || { icon: '❓', label: e.type };
         const isMe = e.uid === currentUser.uid;
-        return `<div class="activity-entry">
+        return `<div class="activity-entry cal-event" data-entry-id="${e.id}" data-uid="${e.uid}">
           <div class="activity-icon">${meta.icon}</div>
           <div class="activity-meta">
             <div class="activity-type">${meta.label}</div>
@@ -1784,17 +1818,18 @@
       }
     }
 
-    function getDetailData(type) {
+    function getDetailData(type, root = document) {
+      const qid = id => root.querySelector(`#${id}`);
       switch (type) {
         case 'feeding': {
-          const oz    = document.getElementById('detail-oz')?.value;
-          const notes = document.getElementById('detail-notes')?.value.trim();
+          const oz    = qid('detail-oz')?.value;
+          const notes = qid('detail-notes')?.value.trim();
           const d = [oz ? `${oz}oz` : '', notes].filter(Boolean).join(' · ');
           return d ? { details: d } : {};
         }
         case 'diaper': {
-          const wet   = document.querySelector('#diaper-wet-chips .log-chip.active')?.dataset.val || 'none';
-          const dirty = document.querySelector('#diaper-dirty-chips .log-chip.active')?.dataset.val || 'none';
+          const wet   = root.querySelector('#diaper-wet-chips .log-chip.active')?.dataset.val || 'none';
+          const dirty = root.querySelector('#diaper-dirty-chips .log-chip.active')?.dataset.val || 'none';
           const parts = [];
           if (wet   !== 'none') parts.push(`wet: ${wet}`);
           if (dirty !== 'none') parts.push(`dirty: ${dirty}`);
@@ -1802,12 +1837,12 @@
         }
         case 'sleep':
         case 'tummy_time': {
-          const mins = parseFloat(document.getElementById('detail-duration')?.value);
+          const mins = parseFloat(qid('detail-duration')?.value);
           return mins > 0 ? { duration: String(mins) } : {};
         }
         case 'meds':
         case 'bath': {
-          const notes = document.getElementById('detail-notes')?.value.trim();
+          const notes = qid('detail-notes')?.value.trim();
           return notes ? { details: notes } : {};
         }
         default: return {};
@@ -1852,6 +1887,82 @@
 
       panel.style.display = 'block';
       document.getElementById('log-detail-inner').querySelector('input')?.focus();
+    }
+
+    let _editingEntry = null;
+
+    function populateEditFields(type, entry) {
+      switch (type) {
+        case 'feeding': {
+          const details = entry.details || '';
+          const ozMatch = details.match(/^(\d+\.?\d*)oz/);
+          if (ozMatch) document.getElementById('detail-oz').value = ozMatch[1];
+          const note = details.replace(/^\d+\.?\d*oz\s*·?\s*/, '').trim();
+          if (note) document.getElementById('detail-notes').value = note;
+          break;
+        }
+        case 'diaper': {
+          const map = (entry.details || '').split(', ').reduce((m, p) => {
+            const [k, v] = p.split(': ');
+            if (k && v) m[k.trim()] = v.trim();
+            return m;
+          }, {});
+          const activate = (sel, val) =>
+            document.querySelectorAll(`${sel} .log-chip`).forEach(b =>
+              b.classList.toggle('active', b.dataset.val === val));
+          activate('#diaper-wet-chips',   map.wet   || 'none');
+          activate('#diaper-dirty-chips', map.dirty || 'none');
+          break;
+        }
+        case 'sleep':
+        case 'tummy_time':
+          if (entry.duration) document.getElementById('detail-duration').value = entry.duration;
+          break;
+        case 'meds':
+        case 'bath':
+          if (entry.details) document.getElementById('detail-notes').value = entry.details;
+          break;
+      }
+    }
+
+    function openEditPanel(entry, currentUid) {
+      _editingEntry = entry;
+      // Close any open inline log panel
+      _selectedType = null;
+      document.getElementById('log-detail-panel').style.display = 'none';
+      document.querySelectorAll('.last-act-tile.selected').forEach(t => t.classList.remove('selected'));
+
+      const meta = LOG_META[entry.type] || { icon: '❓', label: entry.type };
+      document.getElementById('edit-entry-heading').textContent = `${meta.icon}  ${meta.label}`;
+
+      const ts = entry.timestamp.toDate();
+      const hh = String(ts.getHours()).padStart(2, '0');
+      const mm = String(ts.getMinutes()).padStart(2, '0');
+      const timeField = `<div class="log-field">
+        <span class="log-field-label">Time</span>
+        <input class="log-input" type="time" id="detail-time" value="${hh}:${mm}">
+      </div>`;
+      document.getElementById('edit-entry-inner').innerHTML = timeField + getDetailFields(entry.type);
+
+      // Wire chip toggles
+      ['#diaper-wet-chips', '#diaper-dirty-chips'].forEach(sel => {
+        document.querySelectorAll(`${sel} .log-chip`).forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll(`${sel} .log-chip`).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+          });
+        });
+      });
+
+      populateEditFields(entry.type, entry);
+
+      // Only show delete for own entries
+      document.getElementById('btn-edit-delete').style.display =
+        entry.uid === currentUid ? 'inline-flex' : 'none';
+
+      document.getElementById('btn-edit-save').disabled = false;
+      document.getElementById('btn-edit-save').textContent = 'Save';
+      document.getElementById('edit-entry-modal').style.display = 'flex';
     }
 
     // ── Alert settings ─────────────────────────────────────
@@ -2152,7 +2263,7 @@
       document.getElementById('btn-log-confirm').addEventListener('click', async () => {
         if (!_selectedType) return;
         const type  = _selectedType;
-        const extra = getDetailData(type);
+        const extra = getDetailData(type, document.getElementById('log-detail-inner'));
         const btn   = document.getElementById('btn-log-confirm');
         btn.disabled = true; btn.textContent = 'Logging…';
         try {
@@ -2185,6 +2296,75 @@
         _selectedType = null;
         document.getElementById('log-detail-panel').style.display = 'none';
         document.querySelectorAll('.last-act-tile.selected').forEach(t => t.classList.remove('selected'));
+      });
+
+      // Calendar event tap → edit modal
+      document.getElementById('activity-feed').addEventListener('click', async e => {
+        const block = e.target.closest('.cal-event');
+        if (!block) return;
+        const entryId  = block.dataset.entryId;
+        const entryUid = block.dataset.uid;
+        if (!entryId || !entryUid) return;
+        const snap = await getDoc(doc(db, 'babyLogs', entryUid, 'entries', entryId));
+        if (!snap.exists()) return;
+        openEditPanel({ id: snap.id, uid: entryUid, ...snap.data() }, uid);
+      });
+
+      // Edit modal — save
+      document.getElementById('btn-edit-save').addEventListener('click', async () => {
+        if (!_editingEntry) return;
+        const btn = document.getElementById('btn-edit-save');
+        btn.disabled = true; btn.textContent = 'Saving…';
+        try {
+          const timeVal = document.getElementById('detail-time')?.value;
+          const ts = (() => {
+            if (!timeVal) return _editingEntry.timestamp;
+            const [h, m] = timeVal.split(':').map(Number);
+            const d = _editingEntry.timestamp.toDate(); d.setHours(h, m, 0, 0);
+            return Timestamp.fromDate(d);
+          })();
+          const extra = getDetailData(_editingEntry.type, document.getElementById('edit-entry-inner'));
+          await setDoc(doc(db, 'babyLogs', _editingEntry.uid, 'entries', _editingEntry.id), {
+            type: _editingEntry.type, timestamp: ts,
+            authorId: _editingEntry.authorId, authorName: _editingEntry.authorName,
+            ...extra
+          });
+          showToast('Entry updated');
+          document.getElementById('edit-entry-modal').style.display = 'none';
+          _editingEntry = null;
+          await Promise.all([loadActivity(firebaseUser, memberIds), loadLastActivity(memberIds)]);
+        } catch {
+          showToast('Could not update — check permissions.');
+          btn.disabled = false; btn.textContent = 'Save';
+        }
+      });
+
+      // Edit modal — delete
+      document.getElementById('btn-edit-delete').addEventListener('click', async () => {
+        if (!_editingEntry) return;
+        const label = LOG_META[_editingEntry.type]?.label || _editingEntry.type;
+        if (!confirm(`Delete this ${label} entry?`)) return;
+        try {
+          await deleteDoc(doc(db, 'babyLogs', _editingEntry.uid, 'entries', _editingEntry.id));
+          showToast('Entry deleted');
+          document.getElementById('edit-entry-modal').style.display = 'none';
+          _editingEntry = null;
+          await Promise.all([loadActivity(firebaseUser, memberIds), loadLastActivity(memberIds)]);
+        } catch {
+          showToast('Could not delete — check permissions.');
+        }
+      });
+
+      // Edit modal — cancel
+      document.getElementById('btn-edit-cancel').addEventListener('click', () => {
+        document.getElementById('edit-entry-modal').style.display = 'none';
+        _editingEntry = null;
+      });
+      document.getElementById('edit-entry-modal').addEventListener('click', e => {
+        if (e.target === e.currentTarget) {
+          e.currentTarget.style.display = 'none';
+          _editingEntry = null;
+        }
       });
 
       // Brand logo — return to main view
