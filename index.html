@@ -157,7 +157,7 @@
       z-index: 10;
     }
 
-    /* Volume buttons (right side, above power — Pixel 10 style) */
+    /* Volume buttons */
     .pixel-phone::before {
       content: '';
       position: absolute;
@@ -169,7 +169,7 @@
       border-radius: 0 4px 4px 0;
     }
 
-    /* Power / fingerprint button (right side, below volume) */
+    /* Power / fingerprint button */
     .pixel-phone::after {
       content: '';
       position: absolute;
@@ -197,10 +197,7 @@
 
     .pixel-watch .watch-face {
       position: absolute;
-      top: 7px;
-      left: 7px;
-      right: 7px;
-      bottom: 7px;
+      top: 7px; left: 7px; right: 7px; bottom: 7px;
       border-radius: 50%;
       background: #000;
       overflow: hidden;
@@ -221,6 +218,74 @@
       height: 24px;
       background: #2a2a2c;
       border-radius: 0 4px 4px 0;
+    }
+
+    /* Browser / laptop mockup */
+    .browser-mockup {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(59,47,110,0.22), 0 0 0 1px rgba(0,0,0,0.08);
+      background: #fff;
+    }
+    .browser-bar {
+      background: #f0f0f5;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #e0e0e8;
+    }
+    .browser-dots::before {
+      content: '● ● ●';
+      font-size: 0.5rem;
+      letter-spacing: 3px;
+      color: #ccc;
+    }
+    .browser-url {
+      flex: 1;
+      background: #fff;
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.72rem;
+      color: #888;
+      border: 1px solid #e0e0e8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .browser-mockup img { width: 100%; display: block; }
+
+    /* Device section */
+    .device-section {
+      background: var(--mombie-soft);
+      padding: 80px 0;
+    }
+    .device-label {
+      font-weight: 700;
+      color: var(--mombie-indigo);
+      font-size: 1rem;
+      margin-top: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    .device-desc {
+      color: #666;
+      font-size: 0.85rem;
+      max-width: 200px;
+      margin: 0 auto;
+    }
+
+    /* Email sign-in section at bottom */
+    .email-signin-section {
+      background: #faf8ff;
+      padding: 56px 0;
+      border-top: 1px solid #e8e0f8;
+    }
+    .email-signin-section .section-label {
+      color: #aaa;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1.25rem;
     }
   </style>
 
@@ -273,31 +338,13 @@
             <span class="hero-badge">🌙 For sleep-deprived parents everywhere</span>
             <h1 class="mb-5">Take turns.<br>Get rest.<br>Survive the newborn nights — together.</h1>
             <p class="mb-5" style="color:rgba(255,255,255,0.85);font-size:1.1rem;">Mombie coordinates night-shift schedules between partners so both of you actually get to sleep. Gentle smartwatch alerts wake the right parent at the right time — without disturbing anyone else.</p>
-<div class="mt-3">
+            <div class="mt-3">
               <div style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:8px;">Sign in to manage your family:</div>
               <button class="btn-google btn-google-hero" id="btn-signin-hero">
                 <svg width="20" height="20" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
                 Sign in with Google
               </button>
-
-              <!-- Email sign-in toggle -->
-              <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
-                <div style="flex:1;height:1px;background:rgba(255,255,255,0.2)"></div>
-                <span style="color:rgba(255,255,255,0.45);font-size:0.78rem">or</span>
-                <div style="flex:1;height:1px;background:rgba(255,255,255,0.2)"></div>
-              </div>
-              <div id="email-form" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;max-width:320px;">
-                <input id="email-input" type="email" placeholder="Email" autocomplete="email"
-                  style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:12px;padding:10px 14px;color:#fff;font-size:0.9rem;outline:none;width:100%;">
-                <input id="password-input" type="password" placeholder="Password" autocomplete="current-password"
-                  style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:12px;padding:10px 14px;color:#fff;font-size:0.9rem;outline:none;width:100%;">
-                <div style="display:flex;gap:8px;">
-                  <button id="btn-email-signin" style="flex:1;background:#fdcc52;color:#1a1040;border:none;border-radius:12px;padding:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">Sign in</button>
-                  <button id="btn-email-signup" style="flex:1;background:rgba(253,204,82,0.15);color:#fdcc52;border:1px solid #fdcc52;border-radius:12px;padding:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">Create account</button>
-                </div>
-              </div>
-
-              <div id="signin-error" style="color:#f87171;font-size:0.82rem;margin-top:8px;display:none"></div>
+              <div id="signin-google-error" style="color:#f87171;font-size:0.82rem;margin-top:8px;display:none"></div>
             </div>
           </div>
         </div>
@@ -325,6 +372,61 @@
             <a class="badge-link" href="#"><img src="img/google-play-badge.svg" alt="Get it on Google Play"></a>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cross-device section -->
+  <section class="device-section" id="devices">
+    <div class="container">
+      <div class="section-heading text-center mb-5">
+        <div class="section-divider">💻 📱 ⌚</div>
+        <h2>One app. Every device.</h2>
+        <p class="text-muted">Mombie works across your browser, your phone, and your watch — all in sync.</p>
+      </div>
+      <div class="row align-items-end justify-content-center g-5">
+
+        <!-- Web Dashboard -->
+        <div class="col-lg-5 col-md-6 text-center">
+          <div class="browser-mockup">
+            <div class="browser-bar">
+              <span class="browser-dots"></span>
+              <span class="browser-url">mombie.app/web_auth/</span>
+            </div>
+            <img src="feature-graphics/time-since.png" alt="Mombie web dashboard">
+          </div>
+          <p class="device-label">Web Dashboard</p>
+          <p class="device-desc">Full activity log, charts, and family management on any browser.</p>
+        </div>
+
+        <!-- Phone -->
+        <div class="col-lg-3 col-md-4 text-center">
+          <div class="pixel-phone" style="width:180px;">
+            <div class="pixel-screen">
+              <img src="feature-graphics/time-since-phone.png" alt="Mombie Android app" style="width:100%;display:block;">
+            </div>
+          </div>
+          <p class="device-label">Android App</p>
+          <p class="device-desc">Log events and receive buzz alerts during night shifts.</p>
+        </div>
+
+        <!-- Watch -->
+        <div class="col-lg-2 col-md-3 text-center">
+          <div style="display:flex;justify-content:center;">
+            <div class="pixel-watch" style="width:120px;height:120px;">
+              <div class="watch-face">
+                <div style="color:#fdcc52;font-size:0.45rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Mombie</div>
+                <div style="color:rgba(255,255,255,0.45);font-size:0.42rem;margin-bottom:1px;">Shift ends</div>
+                <div style="color:#fff;font-size:1.2rem;font-weight:900;line-height:1;">2:45</div>
+                <div style="color:rgba(255,255,255,0.35);font-size:0.38rem;margin-bottom:6px;">Wake Alex · 4AM</div>
+                <div style="background:#fdcc52;border-radius:6px;padding:3px 8px;color:#1a1040;font-size:0.38rem;font-weight:700;">LOG EVENT</div>
+              </div>
+            </div>
+          </div>
+          <p class="device-label">Pixel Watch</p>
+          <p class="device-desc">Haptic alerts and quick logging on your wrist.</p>
+        </div>
+
       </div>
     </div>
   </section>
@@ -425,22 +527,6 @@
                 </div>
               </div>
             </div>
-            <div class="row">
-              <div class="col-lg-6">
-                <div class="feature-item">
-                  <i class="icon-chart text-primary"></i>
-                  <h3>Sleep Insights</h3>
-                  <p class="text-muted">See how much rest each parent is actually getting over the week. Spot imbalances and rebalance shifts before exhaustion hits.</p>
-                </div>
-              </div>
-              <div class="col-lg-6">
-                <div class="feature-item">
-                  <i class="icon-lock text-primary"></i>
-                  <h3>Private &amp; Offline First</h3>
-                  <p class="text-muted">All data syncs directly between your devices. No subscriptions, no third-party servers storing your family's information.</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -479,25 +565,39 @@
     </div>
   </section>
 
+  <!-- Email sign-in (low prominence) -->
+  <section class="email-signin-section" id="email-signin">
+    <div class="container">
+      <div class="col-md-5 col-lg-4 mx-auto text-center">
+        <p class="section-label">Sign in with email</p>
+        <div id="email-form" style="display:flex;flex-direction:column;gap:8px;">
+          <input id="email-input" type="email" placeholder="Email" autocomplete="email"
+            style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px 14px;color:#333;font-size:0.9rem;outline:none;width:100%;">
+          <input id="password-input" type="password" placeholder="Password" autocomplete="current-password"
+            style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px 14px;color:#333;font-size:0.9rem;outline:none;width:100%;">
+          <div style="display:flex;gap:8px;">
+            <button id="btn-email-signin" style="flex:1;background:var(--mombie-indigo);color:#fff;border:none;border-radius:10px;padding:10px;font-weight:600;font-size:0.88rem;cursor:pointer;">Sign in</button>
+            <button id="btn-email-signup" style="flex:1;background:#fff;color:var(--mombie-indigo);border:1px solid var(--mombie-indigo);border-radius:10px;padding:10px;font-weight:600;font-size:0.88rem;cursor:pointer;">Create account</button>
+          </div>
+          <div id="email-signin-error" style="color:#dc2626;font-size:0.82rem;margin-top:4px;display:none"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Contact -->
   <section class="contact bg-primary" id="contact">
     <div class="container">
       <h2>Made with <i class="fas fa-heart"></i> for exhausted parents</h2>
       <ul class="list-inline list-social">
         <li class="list-inline-item social-twitter">
-          <a href="#">
-            <i class="fab fa-twitter"></i>
-          </a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
         </li>
         <li class="list-inline-item social-facebook">
-          <a href="#">
-            <i class="fab fa-facebook-f"></i>
-          </a>
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
         </li>
         <li class="list-inline-item social-google-plus">
-          <a href="#">
-            <i class="fab fa-instagram"></i>
-          </a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
         </li>
       </ul>
     </div>
@@ -507,18 +607,10 @@
     <div class="container">
       <p>&copy; Mombie 2026. All Rights Reserved.</p>
       <ul class="list-inline">
-        <li class="list-inline-item">
-          <a href="#">Privacy</a>
-        </li>
-        <li class="list-inline-item">
-          <a href="#">Terms</a>
-        </li>
-        <li class="list-inline-item">
-          <a href="#">FAQ</a>
-        </li>
-        <li class="list-inline-item">
-          <a href="delete-account/">Delete Account</a>
-        </li>
+        <li class="list-inline-item"><a href="#">Privacy</a></li>
+        <li class="list-inline-item"><a href="#">Terms</a></li>
+        <li class="list-inline-item"><a href="#">FAQ</a></li>
+        <li class="list-inline-item"><a href="delete-account/">Delete Account</a></li>
       </ul>
     </div>
   </footer>
@@ -558,7 +650,7 @@
     }
 
     async function signIn() {
-      const errEl = document.getElementById('signin-error');
+      const errEl = document.getElementById('signin-google-error');
       errEl.style.display = 'none';
       try {
         await signInWithPopup(auth, provider);
@@ -571,7 +663,7 @@
     }
 
     async function emailAuth(mode) {
-      const errEl   = document.getElementById('signin-error');
+      const errEl   = document.getElementById('email-signin-error');
       const email   = document.getElementById('email-input').value.trim();
       const password = document.getElementById('password-input').value;
       errEl.style.display = 'none';
