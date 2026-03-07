@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Privacy Policy – Mombie</title>
+  <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet">
+  <style>
+    :root {
+      --mombie-indigo: #3b2f6e;
+      --mombie-purple: #7b4397;
+      --mombie-gold:   #fdcc52;
+    }
+    body { font-family: 'Lato', sans-serif; color: #333; background: #fff; }
+    .policy-nav {
+      background: var(--mombie-indigo);
+      padding: 16px 0;
+    }
+    .policy-nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .policy-nav a:hover { color: var(--mombie-gold); }
+    .policy-header {
+      background: linear-gradient(135deg, var(--mombie-indigo) 0%, var(--mombie-purple) 100%);
+      color: #fff;
+      padding: 60px 0 40px;
+    }
+    .policy-header h1 { font-weight: 900; margin-bottom: 0.5rem; }
+    .policy-header p { color: rgba(255,255,255,0.7); margin: 0; }
+    .policy-body {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    .policy-body h2 {
+      color: var(--mombie-indigo);
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-top: 2.5rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #f0eaff;
+    }
+    .policy-body h2:first-child { margin-top: 0; }
+    .policy-body p, .policy-body li {
+      line-height: 1.75;
+      color: #444;
+      font-size: 0.95rem;
+    }
+    .policy-body ul { padding-left: 1.5rem; margin-bottom: 1rem; }
+    .policy-body a { color: var(--mombie-purple); }
+    .highlight-box {
+      background: #f4f0ff;
+      border-left: 4px solid var(--mombie-purple);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin: 1.5rem 0;
+      font-size: 0.92rem;
+      color: #444;
+    }
+    .policy-footer {
+      background: var(--mombie-indigo);
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+      padding: 24px 0;
+      font-size: 0.85rem;
+    }
+    .policy-footer a { color: var(--mombie-gold); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <nav class="policy-nav">
+    <div class="container">
+      <a href="../">&#8592; Mombie</a>
+    </div>
+  </nav>
+
+  <div class="policy-header">
+    <div class="container text-center">
+      <h1>Privacy Policy</h1>
+      <p>Last updated: March 7, 2026</p>
+    </div>
+  </div>
+
+  <div class="policy-body">
+
+    <div class="highlight-box">
+      <strong>Summary:</strong> Mombie stores your baby activity logs and family schedule in Firebase (Google Cloud) so your partner's devices stay in sync. We do not sell your data, share it with advertisers, or use it for any purpose other than running the app.
+    </div>
+
+    <h2>1. Who We Are</h2>
+    <p>Mombie ("we", "us", or "our") is a baby care coordination app developed and operated as an independent project. You can contact us at <a href="mailto:privacy@mombie.app">privacy@mombie.app</a>.</p>
+
+    <h2>2. Information We Collect</h2>
+    <p>We collect only what is necessary to operate the app:</p>
+    <ul>
+      <li><strong>Account information.</strong> When you sign in with Google, we receive your name, email address, and profile photo from Google. If you sign in with email and password, we store your email address. Passwords are managed by Firebase Authentication and are never stored in plain text.</li>
+      <li><strong>Baby activity logs.</strong> Data you enter directly — feedings (type, amount, nursing duration), diaper changes, sleep sessions, tummy time, medication, and bath logs — including timestamps and any notes you add.</li>
+      <li><strong>Family membership.</strong> The unique IDs of family members you link to your account, and an invite code used to join a family group.</li>
+      <li><strong>Device tokens.</strong> Vibration/buzz signals used to alert a co-parent's phone or watch. These are transient and deleted immediately after delivery.</li>
+      <li><strong>Wear OS / watch usage.</strong> The app communicates activity logs between your phone and watch over the Wearable Data Layer API. No additional data is collected from your watch beyond what you log.</li>
+    </ul>
+    <p>We do <strong>not</strong> collect location data, contacts, photos, microphone input, or any data beyond what is listed above.</p>
+
+    <h2>3. How We Use Your Information</h2>
+    <ul>
+      <li>To display baby activity logs and schedules to you and your linked family members in real time.</li>
+      <li>To send haptic buzz alerts to a co-parent's phone or watch during night shifts.</li>
+      <li>To generate on-device charts and statistics (milk intake, activity history) shown only to your family group.</li>
+      <li>To authenticate your identity and maintain your session securely.</li>
+    </ul>
+    <p>We do not use your data for advertising, profiling, or any purpose unrelated to operating the app.</p>
+
+    <h2>4. How We Share Your Information</h2>
+    <ul>
+      <li><strong>With your family group.</strong> Activity logs you create are visible to all members of your linked family. You control who is in your family by managing invite codes.</li>
+      <li><strong>Firebase (Google LLC).</strong> All data is stored in Google Firebase (Firestore and Firebase Authentication). Google's infrastructure privacy policy is available at <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.</li>
+      <li><strong>No other sharing.</strong> We do not sell, rent, or share your data with any other third party, advertiser, or analytics provider.</li>
+    </ul>
+
+    <h2>5. Data Storage and Security</h2>
+    <p>Your data is stored in Google Firebase Firestore, which is hosted in Google Cloud data centers. Access to your data is controlled by Firebase Security Rules — only you and your linked family members can read or write your activity logs. We enforce HTTPS for all data in transit.</p>
+    <p>While we take reasonable precautions, no system is perfectly secure. In the event of a breach that affects your data we will notify you promptly.</p>
+
+    <h2>6. Data Retention</h2>
+    <p>Your data is retained as long as your account is active. You may delete your account and all associated data at any time from the app's Settings page or by visiting <a href="../delete-account/">mombie.app/delete-account/</a>. Account deletion is permanent and cannot be undone.</p>
+
+    <h2>7. Your Rights</h2>
+    <p>You have the right to:</p>
+    <ul>
+      <li><strong>Access</strong> the data we hold about you (it is visible directly in the app).</li>
+      <li><strong>Correct</strong> any activity log entry by tapping it in the Activity Calendar and editing it.</li>
+      <li><strong>Delete</strong> individual log entries in the app, or delete your entire account and all data via Settings.</li>
+      <li><strong>Export</strong> your data using the CSV export feature in Settings.</li>
+      <li><strong>Withdraw consent</strong> at any time by deleting your account.</li>
+    </ul>
+    <p>To exercise any right or make a request, contact us at <a href="mailto:privacy@mombie.app">privacy@mombie.app</a>.</p>
+
+    <h2>8. Children's Privacy</h2>
+    <p>Mombie is designed for use by parents and adult caregivers. The app records data <em>about</em> infants but is operated by adults. We do not knowingly collect personal information from children under 13. The infants whose care is being logged do not have accounts and do not interact with the app directly. If you believe a child under 13 has created an account, please contact us immediately and we will delete it.</p>
+
+    <h2>9. Changes to This Policy</h2>
+    <p>We may update this policy as the app evolves. When we make material changes we will update the "Last updated" date at the top of this page. Continued use of the app after changes are posted constitutes acceptance of the updated policy.</p>
+
+    <h2>10. Contact Us</h2>
+    <p>Questions, concerns, or data requests:</p>
+    <ul>
+      <li>Email: <a href="mailto:privacy@mombie.app">privacy@mombie.app</a></li>
+      <li>Web: <a href="https://mombie.app">mombie.app</a></li>
+    </ul>
+
+  </div>
+
+  <div class="policy-footer">
+    <p>&copy; Mombie 2026 &nbsp;·&nbsp; <a href="../">Home</a> &nbsp;·&nbsp; <a href="../delete-account/">Delete Account</a></p>
+  </div>
+
+</body>
+</html>
